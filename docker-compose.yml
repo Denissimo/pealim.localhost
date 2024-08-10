@@ -1,0 +1,66 @@
+networks:
+  default:
+    external: true
+    name: gateway
+#  dev1:
+#    internal: true
+
+services:
+  nginx:
+    labels:
+#      - "traefik.enable=true"
+#      - "traefik.http.routers.pealim.nginx.rule=Host(`pealim.localhost`)"
+#      - "traefik.http.services.pealim.nginx.loadbalancer.server.port=80"
+#      - "traefik.docker.network=gateway"
+      traefik.enable: "true"
+      traefik.http.services.pealim_nginx-80.loadbalancer.server.port: "80"
+      traefik.http.routers.pealim_nginx.entrypoints: "web"
+      traefik.http.routers.pealim_nginx.rule: "Host(`pealim.localhost`)"
+#      traefik.http.routers.pealim_nginx.service: "pealim.nginx-80"
+    container_name: pealim_nginx
+    hostname: pealim_nginx
+    # используем последний стабильный образ nginx
+    image: nginx:1.22.1-alpine
+    depends_on:
+      - php
+#    ports:
+#      - '80:80'
+    # монтируем директории, слева директории на основной машине, справа - куда они монтируются в контейнере
+    volumes:
+      - ./hosts:/etc/nginx/conf.d
+      - ./www:/var/www
+      - ./logs:/var/log/nginx
+    # nginx должен общаться с php контейнером
+    environment:
+      PHP_INI_SCAN_DIR: "/usr/local/etc/php/custom.d:/usr/local/etc/php/conf.d"
+    links:
+      - php
+    networks:
+      - default
+#      - dev1
+  php:
+    container_name: pealim_php
+    # у нас свой образ для PHP, указываем путь к нему и говорим что его надо собрать
+    build: ./images/php
+    # монтируем директорию с проектами
+    volumes:
+      - ./www:/var/www
+      - ./images/php/:/usr/local/etc/php/custom.d
+    depends_on:
+      - postgresql
+    networks:
+      - default
+  postgresql:
+    image: 'bitnami/postgresql:latest'
+    container_name: pealim_postgres
+    environment:
+      - POSTGRESQL_USERNAME=pealim
+      - POSTGRESQL_PASSWORD=pealim
+      - POSTGRESQL_DATABASE=pealim_db
+    ports:
+      - 5511:5432
+    volumes:
+      - /var/lib/postgresql/data
+    networks:
+      - default
+#      - dev1
