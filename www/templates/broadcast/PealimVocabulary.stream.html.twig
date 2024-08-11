@@ -1,0 +1,22 @@
+{# Learn how to use Turbo Streams: https://github.com/symfony/ux-turbo#broadcast-doctrine-entities-update #}
+{% block create %}
+    <turbo-stream action="append" target="pealim_vocabularies">
+        <template>
+            <div id="{{ 'pealim_vocabulary_' ~ id }}">
+                #{{ id }} created
+            </div>
+        </template>
+    </turbo-stream>
+{% endblock %}
+
+{% block update %}
+    <turbo-stream action="update" target="pealim_vocabulary_{{ id }}">
+        <template>
+            #{{ id }} updated
+        </template>
+    </turbo-stream>
+{% endblock %}
+
+{% block remove %}
+    <turbo-stream action="remove" target="pealim_vocabulary_{{ id }}"></turbo-stream>
+{% endblock %}
