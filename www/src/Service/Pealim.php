@@ -2,10 +2,10 @@
 
 namespace App\Service;
 
-use Doctrine\ORM\EntityManager;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Entity\PealimVocabulary as Word;
 
 class Pealim
 {
@@ -25,18 +25,29 @@ class Pealim
     public function search(string $word)
     {
         $url = 'https://www.pealim.com/ru/search/?from-nav=1&q=' . $word;
-//        $url = 'http://www.dostavka-buketov.ru/';
 
+        return $this->grabByUrl($url);
+    }
+
+    public function loadForms(string $path)
+    {
+        $url = 'https://www.pealim.com' . $path;
+
+        return $this->grabByUrl($url);
+    }
+
+    private function grabByUrl(string $url)
+    {
         $response = $this->client->request(
             'GET',
             $url
         );
 
         $statusCode = $response->getStatusCode();
-        echo $statusCode . "\n";
+//        echo $statusCode . "\n";
 
-        $contentType = $response->getHeaders()['content-type'][0];
-        echo $contentType . "\n";
+        $contentType = $response->getHeaders()['content-type'][0] ?? null;
+//        echo $contentType . "\n";
 
         $content = $response->getContent();
 //        echo $content . "\n";
@@ -45,6 +56,7 @@ class Pealim
         // $content = ['id' => 521583, 'name' => 'symfony-docs', ...]
 
         return $content;
+
     }
 
     public function findLink(string $cssClass, string $text): string
@@ -54,5 +66,10 @@ class Pealim
         preg_match($template, $text, $matches);
 
         return $matches[1] ?? '';
+    }
+
+    public function parseForms(string $content)
+    {
+        $template = '/<\/h2>/s';
     }
 }
