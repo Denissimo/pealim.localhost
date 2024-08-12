@@ -9,6 +9,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use App\Service\Pealim;
 
 #[AsCommand(
     name: 'pealim:parse',
@@ -16,9 +17,12 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 )]
 class PealimParseCommand extends Command
 {
-    public function __construct()
+    private Pealim $pealimService;
+
+    public function __construct(Pealim $pealimService)
     {
         parent::__construct();
+        $this->pealimService = $pealimService;
     }
 
     protected function configure(): void
@@ -41,6 +45,11 @@ class PealimParseCommand extends Command
         if ($input->getOption('option1')) {
             // ...
         }
+
+        $content = $this->pealimService->search('לָלֶכֶת');
+        $cssClass = 'verb-search-result';
+        $link =  $this->pealimService->findLink($cssClass, $content);
+        $io->info($link);
 
         $io->success('You have a new command! Now make it your own! Pass --help to see your options.');
 

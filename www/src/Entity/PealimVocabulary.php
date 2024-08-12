@@ -18,6 +18,9 @@ class PealimVocabulary
     #[ORM\Column(length: 64)]
     private ?string $slug = null;
 
+    #[ORM\Column(length: 255)]
+    private ?string $word = null;
+
     #[ORM\Column(length: 32)]
     private ?string $speechPart = null;
 
@@ -33,9 +36,6 @@ class PealimVocabulary
     #[ORM\Column(length: 16, nullable: true)]
     private ?string $time = null;
 
-    #[ORM\Column(length: 255)]
-    private ?string $word = null;
-
     public function getId(): ?int
     {
         return $this->id;
@@ -49,6 +49,18 @@ class PealimVocabulary
     public function setSlug(string $slug): static
     {
         $this->slug = $slug;
+
+        return $this;
+    }
+
+    public function getWord(): ?string
+    {
+        return $this->word;
+    }
+
+    public function setWord(string $word): static
+    {
+        $this->word = $word;
 
         return $this;
     }
@@ -109,18 +121,6 @@ class PealimVocabulary
     public function setTime(?string $time): static
     {
         $this->time = $time;
-
-        return $this;
-    }
-
-    public function getWord(): ?string
-    {
-        return $this->word;
-    }
-
-    public function setWord(string $word): static
-    {
-        $this->word = $word;
 
         return $this;
     }
