@@ -70,6 +70,7 @@ class Pealim
 
     public function parseForms(string $content)
     {
-        $template = '/<\/h2>/s';
+        $tplPart = '<\/h2><p>([А-Яа-яA-Z-a-z0-9]+)[^<]+<b>[^<]+<\/b>.+<\/h3><div class="lead">([А-Яа-яA-Z-a-z0-9]+)<';
+        $tplTr = '<td class="conj-td"( colspan="2"){0,1}>(<div[^<]*)*<span class="menukad">[^<]+<\/span>';
     }
 }
