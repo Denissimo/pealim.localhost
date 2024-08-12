@@ -23,6 +23,15 @@ class PealimVocabulary
     #[ORM\Column(length: 255)]
     private ?string $word = null;
 
+    #[ORM\Column(length: 255)]
+    private ?string $transcription = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $russian = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $root = null;
+
     #[ORM\Column(length: 32)]
     private ?string $speechPart = null;
 
@@ -38,14 +47,8 @@ class PealimVocabulary
     #[ORM\Column(length: 16, nullable: true)]
     private ?string $time = null;
 
-    #[ORM\Column(length: 255)]
-    private ?string $russian = null;
-
     #[ORM\Column(nullable: true)]
     private ?int $person = null;
-
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $root = null;
 
     #[ORM\ManyToOne(targetEntity: self::class, inversedBy: 'children')]
     private ?self $parent = null;
@@ -224,6 +227,18 @@ class PealimVocabulary
                 $child->setParent(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getTranscription(): ?string
+    {
+        return $this->transcription;
+    }
+
+    public function setTranscription(string $transcription): static
+    {
+        $this->transcription = $transcription;
 
         return $this;
     }

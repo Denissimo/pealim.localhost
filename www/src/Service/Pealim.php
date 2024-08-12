@@ -70,7 +70,13 @@ class Pealim
 
     public function parseForms(string $content)
     {
-        $tplPart = '<\/h2><p>([А-Яа-яA-Z-a-z0-9]+)[^<]+<b>[^<]+<\/b>.+<\/h3><div class="lead">([А-Яа-яA-Z-a-z0-9]+)<';
-        $tplTr = '<td class="conj-td"( colspan="2"){0,1}>(<div[^<]*)*<span class="menukad">[^<]+<\/span>';
+        $tplPart = '/<\/h2><p>([А-Яа-яA-Z-a-z0-9]+)[^<]+<b>[^<]+<\/b>.+<\/h3><div class="lead">([А-Яа-яA-Z-a-z0-9]+)</';
+        $tplPart = '/<\/h2><p>([А-Яа-яA-Z-a-z0-9]+)[^<]+<b>[^<]+<\/b>.+<\/h3><div class="lead">/';
+        $tplTd = '/<td class="conj-td"( colspan="2"){0,1}><div[^<]*><div><div><span class="menukad">([^<]+)<\/span><\/div><div class="transcription">([А-Яа-яh<>b\/]+)<\/div>/';
+        $tplTd = '/<td class="conj-td"( colspan="2"){0,1}><div[^<]*><div><div><span class="menukad">([^<]+)<\/span><\/div><div class="transcription">([А-Яа-я,h,<,>,b,\/]+)/';
+        preg_match_all($tplPart, $content, $parts);
+        preg_match_all($tplTd, $content, $td);
+
+        $a = 0;
     }
 }

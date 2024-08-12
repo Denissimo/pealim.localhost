@@ -31,8 +31,6 @@ services:
       - ./www:/var/www
       - ./logs:/var/log/nginx
     # nginx должен общаться с php контейнером
-    environment:
-      PHP_INI_SCAN_DIR: "/usr/local/etc/php/custom.d:/usr/local/etc/php/conf.d"
     links:
       - php
     networks:
@@ -46,6 +44,9 @@ services:
     volumes:
       - ./www:/var/www
       - ./images/php/:/usr/local/etc/php/custom.d
+    environment:
+      - PHP_IDE_CONFIG=serverName=pealim
+      - PHP_INI_SCAN_DIR=/usr/local/etc/php/custom.d:/usr/local/etc/php/conf.d
     depends_on:
       - postgresql
     networks:

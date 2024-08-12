@@ -50,6 +50,7 @@ class PealimParseCommand extends Command
         $cssClass = 'verb-search-result';
         $link =  $this->pealimService->findLink($cssClass, $content);
         $wordFormContent =  $this->pealimService->loadForms($link);
+        $res = $this->pealimService->parseForms($wordFormContent);
         $io->info($wordFormContent);
 
         $io->success('You have a new command! Now make it your own! Pass --help to see your options.');
