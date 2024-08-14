@@ -6,6 +6,10 @@ class TableCell
 {
     private string $content = '';
 
+    private ?Word $word = null;
+
+    private bool $isHeader = false;
+
     private string $class = '';
 
     private int $colspan = 1;
@@ -18,14 +22,19 @@ class TableCell
 
     /**
      * @param string $content
+     * @param Word|null $word
+     * @param bool $isHeader
+     * @param string $class
      * @param int $colspan
      * @param int $rowspan
      * @param int $x
      * @param int $y
      */
-    public function __construct(string $content, string $class = '', int $colspan = 1, int $rowspan = 1, int $x = 0, int $y = 0)
+    public function __construct(string $content, ?Word $word = null, bool $isHeader = false, string $class = '', int $colspan = 1, int $rowspan = 1, int $x = 0, int $y = 0)
     {
         $this->content = $content;
+        $this->word = $word;
+        $this->isHeader = $isHeader;
         $this->class = $class;
         $this->colspan = $colspan;
         $this->rowspan = $rowspan;
@@ -36,6 +45,16 @@ class TableCell
     public function getContent(): string
     {
         return $this->content;
+    }
+
+    public function getWord(): ?Word
+    {
+        return $this->word;
+    }
+
+    public function isHeader(): bool
+    {
+        return $this->isHeader;
     }
 
     public function getClass(): string

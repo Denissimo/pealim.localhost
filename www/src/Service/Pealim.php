@@ -2,10 +2,12 @@
 
 namespace App\Service;
 
+use App\Service\Unit\TableCell;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Doctrine\ORM\EntityManagerInterface;
-use App\Entity\PealimVocabulary as Word;
+use App\Service\Unit\Word;
+use App\Entity\PealimVocabulary;
 
 class Pealim
 {
@@ -73,28 +75,28 @@ class Pealim
         $table = $this->parseTable($content);
         $head = $this->parseHead($table);
         $body = $this->parseBody($table);
-        $bodyReplaced = preg_replace(['/<th/', '/<\/th/'], ['<td', '</td'], $body);
+//        $bodyReplaced = preg_replace(['/<th/', '/<\/th/'], ['<td', '</td'], $body);
         $headTr = $this->parseTr($head);
         $bodyTr = $this->parseTr($body);
-        foreach ($headTr as $tr) {
-            $headTd = $this->parseTd($tr);
+        $maxColumns = 0;
+        foreach ($headTr as $level => $tr) {
+            $td = $this->parseTd($tr, $level);
+            $columns = count($td);
+            $maxColumns =  $columns > $maxColumns ? $columns : $maxColumns;
+            $headTd[] = $td;
         }
-        foreach ($bodyTr as $tr) {
-            $bodyTd = $this->parseTd($tr);
+        foreach ($bodyTr as $level => $tr) {
+            $td = $this->parseTd($tr, $level);
+            $columns = count($td);
+            $maxColumns =  $columns > $maxColumns ? $columns : $maxColumns;
+            $bodyTd[] = $td;
         }
-        $tplPart = '/<\/h2><p>([А-Яа-яA-Z-a-z0-9]+)[^<]+<b>[^<]+<\/b>.+<\/h3><div class="lead">([А-Яа-яA-Z-a-z0-9]+)</';
-        $tplPart = '/<\/h2><p>([А-Яа-яA-Z-a-z0-9]+)[^<]+<b>[^<]+<\/b>.+<\/h3><div class="lead">/';
-        $tplTd = '/<td class="conj-td"( colspan="2"){0,1}><div[^<]*><div><div><span class="menukad">([^<]+)<\/span><\/div><div class="transcription">([А-Яа-яh<>b\/]+)<\/div>/';
-        $tplTd = '/<td class="conj-td"( colspan="2"){0,1}>\s*<div[^<]*>\s*<div>\s*<div><span class="menukad">([^<]+)<\/span><\/div>\s*<div class="transcription">([h-hА-Яа-я]*<b>*[h-hА-Яа-я]*<\/b>*[h-hА-Яа-я]*)/';
-        $tplTr = '/<tr[^>]*>(.+)<\/tr>/U';
-        preg_match_all($tplPart, $content, $parts);
-        preg_match_all($tplTd, $content, $td);
-        preg_match_all($tplTr, $content, $tr);
+        
     }
 
     private function parseTable(string $content, string $class = 'table table-condensed conjugation-table'): string
     {
-        $tplTable = '/<table class="'.$class.'">(.+)<\/table>/U';
+        $tplTable = '/<table class="' . $class . '">(.+)<\/table>/U';
         preg_match_all($tplTable, $content, $table);
 
         return $table[1][0] ?? '';
@@ -124,11 +126,36 @@ class Pealim
         return $tr[1] ?? [];
     }
 
-    private function parseTd(string $content): array
+    private function parseTd(string $content, $level = 0): array
     {
-        $tplTd = '/<td( class="([A-Za-z\-_]+)")?( colspan="(2)")?>(.+)<\/td>/U';
+        $tplTd = '/<(td|th)( class="([A-Za-z\-_]+)")?( rowspan="([0-9]+)")?( colspan="([0-9]+)")?>(.+)<\/(td|th)>/U';
         preg_match_all($tplTd, $content, $td);
+        $cells = count((array)current($td));
+        $tableCells = [];
+        $xCoord = 0;
+        for ($i = 0; $i < $cells; ++$i) {
+            $currentCell = array_column($td, $i);
+            $content = $currentCell[8] ?? '';
+            $word = null;
+            $isHeader = isset($currentCell[1]) && $currentCell[1] == 'th';
+            if (!$isHeader) {
+                $word = new Word($content);
+                $xCoord++;
+            }
+            $colspan = (int)$currentCell[7] ?? 0;
+            $rowspan = (int)$currentCell[5] ?? 0;
+            $tableCells[] = new TableCell(
+                $content,
+                $word,
+                $isHeader,
+                $currentCell[3] ?? '',
+                $colspan,
+                $rowspan,
+                $xCoord++,
+                $level
+            );
+        }
 
-        return $td[1] ?? [];
+        return $tableCells;
     }
 }
