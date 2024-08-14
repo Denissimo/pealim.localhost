@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Service\Unit\TableCell;
+use App\Service\Unit\Verb;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Doctrine\ORM\EntityManagerInterface;
@@ -70,8 +71,17 @@ class Pealim
         return $matches[1] ?? '';
     }
 
-    public function parseForms(string $content)
+    public function parseForms(string $content, ?string $path = null): int
     {
+//        $tplPart = '/<\/h2><p>([А-Яа-яA-Z-a-z0-9]+)[^<]+<b>[^<]+<\/b>.+<\/h3><div class="lead">([А-Яа-яA-Z-a-z0-9]+)</';
+        $tplPart = '/<\/h2><p>([А-Яа-яA-Z-a-z0-9]+)[^<]+<b>([^<]+)<\/b><\/p><p>Корень: <span[^>]+><a[^>]+>([^<]+)<\/a><\/span>/';
+        $tplRus = '/<div class="lead">([^<]+)<\/div>/';
+        preg_match_all($tplPart, $content, $parts);
+        preg_match_all($tplRus, $content, $rus);
+        $speechPart = $parts[1][0] ?? '';
+        $form = $parts[2][0] ?? '';
+        $root = $parts[3][0] ?? '';
+        $translation = $rus[1][0] ?? '';
         $table = $this->parseTable($content);
         $head = $this->parseHead($table);
         $body = $this->parseBody($table);
@@ -82,16 +92,72 @@ class Pealim
         foreach ($headTr as $level => $tr) {
             $td = $this->parseTd($tr, $level);
             $columns = count($td);
-            $maxColumns =  $columns > $maxColumns ? $columns : $maxColumns;
+            $maxColumns = $columns > $maxColumns ? $columns : $maxColumns;
             $headTd[] = $td;
         }
+        $bodyTd = [];
         foreach ($bodyTr as $level => $tr) {
             $td = $this->parseTd($tr, $level);
             $columns = count($td);
-            $maxColumns =  $columns > $maxColumns ? $columns : $maxColumns;
+            $maxColumns = max($columns, $maxColumns);
             $bodyTd[] = $td;
         }
-        
+
+        $cellsTable = [];
+
+        foreach ($bodyTd as $level => $cellsList) {
+            foreach ($cellsList as $cell) {
+                if ($cell->isHeader()) {
+                    continue;
+                }
+                $cellsTable[] = $cell;
+                if (Verb::getTime($level) == Verb::INFINITIVE) {
+                    continue;
+                }
+                $colspan = $cell->getColSpan();
+                $rowspan = $cell->getRowspan();
+                for ($i = 1; $i < $colspan; $i++) {
+                    $newCell = clone $cell;
+                    $x = $newCell->getX();
+                    $newCell->setX($x + $i);
+                    $cellsTable[] = $newCell;
+                }
+                for ($k = 1; $k < $rowspan; $k++) {
+                    $newCell = clone $cell;
+                    $y = $newCell->getY();
+                    $newCell->setY($y + $k);
+                    $cellsTable[] = $newCell;
+                }
+            }
+        }
+
+        foreach ($cellsTable as $cell) {
+            $isMasculine = Verb::isMasculine($cell->getX());
+            $isPlural = Verb::isPlural($cell->getX());
+            $person = Verb::getPerson($cell->getY());
+            $time = Verb::getTime($cell->getY());
+            $word = $cell->getWord()->getHebrew();
+            $transcription = $cell->getWord()->getTranscription();
+
+            $vocabularyUnit = (new PealimVocabulary())
+                ->setForm($form)
+                ->setSpeechPart($speechPart)
+                ->setRoot($root)
+                ->setMasculine($isMasculine)
+                ->setPerson($person)
+                ->setPlural($isPlural)
+                ->setTime($time)
+                ->setWord($word)
+                ->setRussian($translation)
+                ->setTranscription($transcription)
+                ->setSlug($path);
+
+            $this->entityManager->persist($vocabularyUnit);
+        }
+
+        $this->entityManager->flush();
+
+        return count($cellsTable);
     }
 
     private function parseTable(string $content, string $class = 'table table-condensed conjugation-table'): string
@@ -126,36 +192,51 @@ class Pealim
         return $tr[1] ?? [];
     }
 
-    private function parseTd(string $content, $level = 0): array
+    /**
+     * @param string $content
+     * @param int $level
+     *
+     * @return TableCell[]|array
+     */
+    private function parseTd(string $content, int $level = 0): array
     {
         $tplTd = '/<(td|th)( class="([A-Za-z\-_]+)")?( rowspan="([0-9]+)")?( colspan="([0-9]+)")?>(.+)<\/(td|th)>/U';
         preg_match_all($tplTd, $content, $td);
         $cells = count((array)current($td));
         $tableCells = [];
         $xCoord = 0;
-        for ($i = 0; $i < $cells; ++$i) {
+        for ($i = 0; $i < $cells; $i++) {
             $currentCell = array_column($td, $i);
-            $content = $currentCell[8] ?? '';
+            $cellContent = $currentCell[8] ?? '';
             $word = null;
             $isHeader = isset($currentCell[1]) && $currentCell[1] == 'th';
             if (!$isHeader) {
-                $word = new Word($content);
+                $word = new Word($cellContent);
                 $xCoord++;
             }
-            $colspan = (int)$currentCell[7] ?? 0;
-            $rowspan = (int)$currentCell[5] ?? 0;
+            $colspan = (int)$currentCell[7] ?? 1;
+            $rowspan = (int)$currentCell[5] ?? 1;
             $tableCells[] = new TableCell(
-                $content,
+                $cellContent,
                 $word,
                 $isHeader,
                 $currentCell[3] ?? '',
-                $colspan,
-                $rowspan,
-                $xCoord++,
+                $colspan ?: 1,
+                $rowspan ?: 1,
+                $xCoord,
                 $level
             );
         }
 
         return $tableCells;
+    }
+
+    public function saveVocabulatyUnit(TableCell $cell)
+    {
+        $vocabulatyUnit = new PealimVocabulary();
+        $word = $cell->getWord()->getHebrew();
+        $russian = $cell->getWord()->getTranscription();
+
+
     }
 }

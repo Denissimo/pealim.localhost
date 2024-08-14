@@ -81,4 +81,18 @@ class TableCell
     {
         return $this->y;
     }
+
+    public function setX(int $x): TableCell
+    {
+        $this->x = $x;
+
+        return $this;
+    }
+
+    public function setY(int $y): TableCell
+    {
+        $this->y = $y;
+
+        return $this;
+    }
 }
