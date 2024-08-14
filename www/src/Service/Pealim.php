@@ -70,13 +70,65 @@ class Pealim
 
     public function parseForms(string $content)
     {
+        $table = $this->parseTable($content);
+        $head = $this->parseHead($table);
+        $body = $this->parseBody($table);
+        $bodyReplaced = preg_replace(['/<th/', '/<\/th/'], ['<td', '</td'], $body);
+        $headTr = $this->parseTr($head);
+        $bodyTr = $this->parseTr($body);
+        foreach ($headTr as $tr) {
+            $headTd = $this->parseTd($tr);
+        }
+        foreach ($bodyTr as $tr) {
+            $bodyTd = $this->parseTd($tr);
+        }
         $tplPart = '/<\/h2><p>([А-Яа-яA-Z-a-z0-9]+)[^<]+<b>[^<]+<\/b>.+<\/h3><div class="lead">([А-Яа-яA-Z-a-z0-9]+)</';
         $tplPart = '/<\/h2><p>([А-Яа-яA-Z-a-z0-9]+)[^<]+<b>[^<]+<\/b>.+<\/h3><div class="lead">/';
         $tplTd = '/<td class="conj-td"( colspan="2"){0,1}><div[^<]*><div><div><span class="menukad">([^<]+)<\/span><\/div><div class="transcription">([А-Яа-яh<>b\/]+)<\/div>/';
-        $tplTd = '/<td class="conj-td"( colspan="2"){0,1}><div[^<]*><div><div><span class="menukad">([^<]+)<\/span><\/div><div class="transcription">([А-Яа-я,h,<,>,b,\/]+)/';
+        $tplTd = '/<td class="conj-td"( colspan="2"){0,1}>\s*<div[^<]*>\s*<div>\s*<div><span class="menukad">([^<]+)<\/span><\/div>\s*<div class="transcription">([h-hА-Яа-я]*<b>*[h-hА-Яа-я]*<\/b>*[h-hА-Яа-я]*)/';
+        $tplTr = '/<tr[^>]*>(.+)<\/tr>/U';
         preg_match_all($tplPart, $content, $parts);
         preg_match_all($tplTd, $content, $td);
+        preg_match_all($tplTr, $content, $tr);
+    }
 
-        $a = 0;
+    private function parseTable(string $content, string $class = 'table table-condensed conjugation-table'): string
+    {
+        $tplTable = '/<table class="'.$class.'">(.+)<\/table>/U';
+        preg_match_all($tplTable, $content, $table);
+
+        return $table[1][0] ?? '';
+    }
+
+    private function parseHead(string $content): string
+    {
+        $tplThead = '/<thead[^>]*>(.+)<\/thead>/U';
+        preg_match_all($tplThead, $content, $head);
+
+        return $head[1][0] ?? '';
+    }
+
+    private function parseBody(string $content): string
+    {
+        $tplTbody = '/<tbody[^>]*>(.+)<\/tbody>/U';
+        preg_match_all($tplTbody, $content, $body);
+
+        return $body[1][0] ?? '';
+    }
+
+    private function parseTr(string $content): array
+    {
+        $tplTr = '/<tr[^>]*>(.+)<\/tr>/U';
+        preg_match_all($tplTr, $content, $tr);
+
+        return $tr[1] ?? [];
+    }
+
+    private function parseTd(string $content): array
+    {
+        $tplTd = '/<td( class="([A-Za-z\-_]+)")?( colspan="(2)")?>(.+)<\/td>/U';
+        preg_match_all($tplTd, $content, $td);
+
+        return $td[1] ?? [];
     }
 }
