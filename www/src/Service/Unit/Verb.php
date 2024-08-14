@@ -5,6 +5,10 @@ namespace App\Service\Unit;
 class Verb
 {
     public const INFINITIVE = 'infinitive';
+    public const IMPERATIVE = 'imperative';
+    public const TIME_PRESENT = 'present';
+    public const TIME_PAST = 'past';
+    public const TIME_FUTURE = 'future';
     public static $proertiesRus = [
         'Единственное число' => 0,
         'Множественное число' => 1,
@@ -13,7 +17,7 @@ class Verb
         'Настоящее время / причастие' => 'present',
         'Прошедшее время' => 'past',
         'Будущее время' => 'future',
-        'Повелительное наклонение' => 'imperative',
+        'Повелительное наклонение' => self::IMPERATIVE,
         'Инфинитив' => self::INFINITIVE
     ];
 
@@ -34,14 +38,14 @@ class Verb
     ];
 
     private static $time = [
-        0 => 'present',
-        1 => 'past',
-        2 => 'past',
-        3 => 'past',
-        4 => 'future',
-        5 => 'future',
-        6 => 'future',
-        7 => 'imperative',
+        0 => self::TIME_PRESENT,
+        1 => self::TIME_PAST,
+        2 => self::TIME_PAST,
+        3 => self::TIME_PAST,
+        4 => self::TIME_FUTURE,
+        5 => self::TIME_FUTURE,
+        6 => self::TIME_FUTURE,
+        7 => self::IMPERATIVE,
         8 => self::INFINITIVE,
     ];
 

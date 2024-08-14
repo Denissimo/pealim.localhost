@@ -16,6 +16,20 @@ class PealimVocabularyRepository extends ServiceEntityRepository
         parent::__construct($registry, PealimVocabulary::class);
     }
 
+    /**
+     * @return PealimVocabulary[]|array Returns an array of PealimVocabulary objects
+     */
+    public function findBySlug($value): array
+    {
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.slug = :val')
+            ->setParameter('val', $value)
+            ->orderBy('p.id', 'ASC')
+//            ->setMaxResults(10)
+            ->getQuery()
+            ->getResult();
+    }
+
     //    /**
     //     * @return PealimVocabulary[] Returns an array of PealimVocabulary objects
     //     */
