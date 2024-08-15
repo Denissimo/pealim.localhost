@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Entity\PealimBase;
 use App\Entity\PealimVocabulary;
 use App\Service\Unit\Verb;
 use Doctrine\ORM\EntityManagerInterface;
@@ -26,10 +27,10 @@ class ExcelBuild
     {
         $words = [];
         $row = 0;
-        $slugs = $this->loadSlugs();
-        $pealimRepository = $this->entityManager->getRepository(PealimVocabulary::class);
-        foreach ($slugs as $slug) {
-            $vocabularies = $pealimRepository->findBySlug($slug);
+        $pealimBases = $this->entityManager->getRepository(PealimBase::class)->findAll();
+
+        foreach ($pealimBases as $pealimBase) {
+            $vocabularies = $pealimBase->getChildren();
             $row++;
             $position = 5;
             foreach ($vocabularies as $vocabulary) {
@@ -38,10 +39,10 @@ class ExcelBuild
                 $position++;
                 $words[$row][$position] = sprintf("%s\n%s", $vocabulary->getWord(), $vocabulary->getTranscription());
             }
-            $words[$row][1] = $vocabulary->getSlug();
-            $words[$row][2] = $vocabulary->getForm();
-            $words[$row][3] = $vocabulary->getRoot();
-            $words[$row][5] = $vocabulary->getRussian();
+            $words[$row][1] = $pealimBase->getSlug();
+            $words[$row][2] = $pealimBase->getForm();
+            $words[$row][3] = $pealimBase->getRoot();
+            $words[$row][5] = $pealimBase->getTranslation();
         }
 
         return $words;
@@ -102,17 +103,5 @@ class ExcelBuild
         }
 
         return $n + $slideTime + $coefMascPlur;
-    }
-
-    private function loadSlugs()
-    {
-        $con = $this->entityManager->getConnection();
-//        $sql = "SELECT * FROM messenger_messages WHERE queue_name = :queue_name";
-        $sql = "select p.slug from pealim_vocabulary p GROUP BY p.slug;";
-        $stmt = $con->prepare($sql);
-//        $resultSet = $stmt->executeQuery(['queue_name' => 'competition_333']);
-        $resultSet = $stmt->executeQuery();
-
-        return $resultSet->fetchAllAssociative();
     }
 }
