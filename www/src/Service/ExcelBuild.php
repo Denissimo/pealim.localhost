@@ -31,9 +31,11 @@ class ExcelBuild
         foreach ($slugs as $slug) {
             $vocabularies = $pealimRepository->findBySlug($slug);
             $row++;
+            $position = 5;
             foreach ($vocabularies as $vocabulary) {
                 /** @var PealimVocabulary $vocabulary */
-                $position = $this->chooseColumn($vocabulary);
+//                $position = $this->chooseColumn($vocabulary);
+                $position++;
                 $words[$row][$position] = sprintf("%s\n%s", $vocabulary->getWord(), $vocabulary->getTranscription());
             }
             $words[$row][1] = $vocabulary->getSlug();
