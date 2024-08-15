@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\UX\Turbo\Attribute\Broadcast;
 
+
 #[ORM\Entity(repositoryClass: PealimVocabularyRepository::class)]
 #[Broadcast]
 class PealimVocabulary
@@ -17,26 +18,11 @@ class PealimVocabulary
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 64)]
-    private ?string $slug = null;
-
     #[ORM\Column(length: 255)]
     private ?string $word = null;
 
     #[ORM\Column(length: 255)]
     private ?string $transcription = null;
-
-    #[ORM\Column(length: 255)]
-    private ?string $russian = null;
-
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $root = null;
-
-    #[ORM\Column(length: 32)]
-    private ?string $speechPart = null;
-
-    #[ORM\Column(length: 16)]
-    private ?string $form = null;
 
     #[ORM\Column(nullable: true)]
     private ?bool $isMasculine = null;
@@ -50,33 +36,35 @@ class PealimVocabulary
     #[ORM\Column(nullable: true)]
     private ?int $person = null;
 
-    #[ORM\ManyToOne(targetEntity: self::class, inversedBy: 'children')]
-    private ?self $parent = null;
+    #[ORM\ManyToOne(inversedBy: 'children')]
+    private ?PealimBase $pealimBase = null;
 
-    /**
-     * @var Collection<int, self>
-     */
-    #[ORM\OneToMany(targetEntity: self::class, mappedBy: 'parent')]
-    private Collection $children;
-
-    public function __construct()
-    {
-        $this->children = new ArrayCollection();
-    }
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
+    public function getTranscription(): ?string
+    {
+        return $this->transcription;
+    }
+
+    public function setTranscription(string $transcription): static
+    {
+        $this->transcription = $transcription;
+
+        return $this;
+    }
+
     public function getSlug(): ?string
     {
-        return $this->slug;
+        return $this->pealimBase->getSlug();
     }
 
     public function setSlug(string $slug): static
     {
-        $this->slug = $slug;
+        $this->pealimBase->setSlug($slug);
 
         return $this;
     }
@@ -95,24 +83,24 @@ class PealimVocabulary
 
     public function getSpeechPart(): ?string
     {
-        return $this->speechPart;
+        return  $this->pealimBase->getSpeechPart();
     }
 
     public function setSpeechPart(string $speechPart): static
     {
-        $this->speechPart = $speechPart;
+        $this->pealimBase->setSpeechPart($speechPart);
 
         return $this;
     }
 
     public function getForm(): ?string
     {
-        return $this->form;
+        return  $this->pealimBase->getForm();
     }
 
     public function setForm(string $form): static
     {
-        $this->form = $form;
+        $this->pealimBase->setForm($form);
 
         return $this;
     }
@@ -155,12 +143,12 @@ class PealimVocabulary
 
     public function getRussian(): ?string
     {
-        return $this->russian;
+        return $this->pealimBase->getTranslation();
     }
 
     public function setRussian(string $russian): static
     {
-        $this->russian = $russian;
+        $this->pealimBase->setTranslation($russian);
 
         return $this;
     }
@@ -179,67 +167,26 @@ class PealimVocabulary
 
     public function getRoot(): ?string
     {
-        return $this->root;
+        return $this->pealimBase->getRoot();
     }
 
     public function setRoot(?string $root): static
     {
-        $this->root = $root;
+        $this->pealimBase->setRoot($root);
 
         return $this;
     }
 
-    public function getParent(): ?self
+    public function getPealimBase(): ?PealimBase
     {
-        return $this->parent;
+        return $this->pealimBase;
     }
 
-    public function setParent(?self $parent): static
+    public function setPealimBase(?PealimBase $pealimBase): static
     {
-        $this->parent = $parent;
+        $this->pealimBase = $pealimBase;
 
         return $this;
     }
 
-    /**
-     * @return Collection<int, self>
-     */
-    public function getChildren(): Collection
-    {
-        return $this->children;
-    }
-
-    public function addChild(self $child): static
-    {
-        if (!$this->children->contains($child)) {
-            $this->children->add($child);
-            $child->setParent($this);
-        }
-
-        return $this;
-    }
-
-    public function removeChild(self $child): static
-    {
-        if ($this->children->removeElement($child)) {
-            // set the owning side to null (unless already changed)
-            if ($child->getParent() === $this) {
-                $child->setParent(null);
-            }
-        }
-
-        return $this;
-    }
-
-    public function getTranscription(): ?string
-    {
-        return $this->transcription;
-    }
-
-    public function setTranscription(string $transcription): static
-    {
-        $this->transcription = $transcription;
-
-        return $this;
-    }
 }

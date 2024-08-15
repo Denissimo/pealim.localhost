@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Entity\PealimBase;
 use App\Service\Unit\TableCell;
 use App\Service\Unit\Verb;
 use Symfony\Component\HttpClient\HttpClient;
@@ -73,6 +74,7 @@ class Pealim
 
     public function parseForms(string $content, ?string $path = null): int
     {
+
 //        $tplPart = '/<\/h2><p>([А-Яа-яA-Z-a-z0-9]+)[^<]+<b>[^<]+<\/b>.+<\/h3><div class="lead">([А-Яа-яA-Z-a-z0-9]+)</';
         $tplPart = '/<\/h2><p>([А-Яа-яA-Z-a-z0-9]+)[^<]+<b>([^<]+)<\/b><\/p><p>Корень: <span[^>]+><a[^>]+>([^<]+)<\/a><\/span>/';
         $tplRus = '/<div class="lead">([^<]+)<\/div>/';
@@ -82,6 +84,16 @@ class Pealim
         $form = $parts[2][0] ?? '';
         $root = $parts[3][0] ?? '';
         $translation = $rus[1][0] ?? '';
+        $pealimBase = (new PealimBase())->setSlug($path)
+            ->setForm($form)
+            ->setSpeechPart($speechPart)
+            ->setTranslation($translation)
+            ->setRoot($root);
+        ;
+
+        $this->entityManager->persist($pealimBase);
+        $this->entityManager->flush();
+
         $table = $this->parseTable($content);
         $head = $this->parseHead($table);
         $body = $this->parseBody($table);
@@ -140,17 +152,13 @@ class Pealim
             $transcription = $cell->getWord()->getTranscription();
 
             $vocabularyUnit = (new PealimVocabulary())
-                ->setForm($form)
-                ->setSpeechPart($speechPart)
-                ->setRoot($root)
+                ->setPealimBase($pealimBase)
+                ->setWord($word)
+                ->setTranscription($transcription)
                 ->setMasculine($isMasculine)
-                ->setPerson($person)
                 ->setPlural($isPlural)
                 ->setTime($time)
-                ->setWord($word)
-                ->setRussian($translation)
-                ->setTranscription($transcription)
-                ->setSlug($path);
+                ->setPerson($person);
 
             $this->entityManager->persist($vocabularyUnit);
         }
@@ -158,6 +166,13 @@ class Pealim
         $this->entityManager->flush();
 
         return count($cellsTable);
+    }
+
+    public function checkBase(string $slug): bool
+    {
+        return $this->entityManager
+                ->getRepository(PealimBase::class)
+                ->findOneBy(['slug' => $slug]) instanceof PealimBase;
     }
 
     private function parseTable(string $content, string $class = 'table table-condensed conjugation-table'): string
