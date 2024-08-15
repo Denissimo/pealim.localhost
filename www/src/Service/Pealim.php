@@ -114,20 +114,20 @@ class Pealim
                 if (Verb::getTime($level) == Verb::INFINITIVE) {
                     continue;
                 }
-                $colspan = $cell->getColSpan();
-                $rowspan = $cell->getRowspan();
-                for ($i = 1; $i < $colspan; $i++) {
-                    $newCell = clone $cell;
-                    $x = $newCell->getX();
-                    $newCell->setX($x + $i);
-                    $cellsTable[] = $newCell;
-                }
-                for ($k = 1; $k < $rowspan; $k++) {
-                    $newCell = clone $cell;
-                    $y = $newCell->getY();
-                    $newCell->setY($y + $k);
-                    $cellsTable[] = $newCell;
-                }
+//                $colspan = $cell->getColSpan();
+//                $rowspan = $cell->getRowspan();
+//                for ($i = 1; $i < $colspan; $i++) {
+//                    $newCell = clone $cell;
+//                    $x = $newCell->getX();
+//                    $newCell->setX($x + $i);
+//                    $cellsTable[] = $newCell;
+//                }
+//                for ($k = 1; $k < $rowspan; $k++) {
+//                    $newCell = clone $cell;
+//                    $y = $newCell->getY();
+//                    $newCell->setY($y + $k);
+//                    $cellsTable[] = $newCell;
+//                }
             }
         }
 
