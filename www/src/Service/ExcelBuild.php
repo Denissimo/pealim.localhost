@@ -32,17 +32,18 @@ class ExcelBuild
         foreach ($pealimBases as $pealimBase) {
             $vocabularies = $pealimBase->getChildren();
             $row++;
-            $position = 5;
+            $positionStart = 5;
             foreach ($vocabularies as $vocabulary) {
                 /** @var PealimVocabulary $vocabulary */
-//                $position = $this->chooseColumn($vocabulary);
-                $position++;
-                $words[$row][$position] = sprintf("%s\n%s", $vocabulary->getWord(), $vocabulary->getTranscription());
+                $position = $this->chooseColumn($vocabulary);
+//                $position++;
+                $positionShift = $positionStart + $position;
+                $words[$row][$positionShift] = sprintf("%s\n%s", $vocabulary->getWord(), $vocabulary->getTranscription());
             }
             $words[$row][1] = $pealimBase->getSlug();
             $words[$row][2] = $pealimBase->getForm();
             $words[$row][3] = $pealimBase->getRoot();
-            $words[$row][5] = $pealimBase->getTranslation();
+            $words[$row][4] = $pealimBase->getTranslation();
         }
 
         return $words;
@@ -69,39 +70,13 @@ class ExcelBuild
 
     private function chooseColumn(PealimVocabulary $vocabulary): int
     {
+        $time = $vocabulary->getTime();
+        $isPlural = (int)$vocabulary->isPlural();
+        $isMasculine = (int)$vocabulary->isMasculine();
+        $person = $vocabulary->getPerson();
+        $timeShift = Verb::$timeShift[$time]['shift'] ?? 0;
+        $positionShift = Verb::$positionShift[$person][$isPlural][$isMasculine]['shift'] ?? 0;
 
-        $coefMasculine = $vocabulary->isMasculine() ? 2 : 0;
-        $coefPlural = $vocabulary->isPlural() ? 1 : 0;
-        $coefMascPlur = $coefMasculine + $coefPlural;
-        $slideTime = 0;
-        $n = 0;
-        switch (true) {
-            case $vocabulary->getTime() == Verb::INFINITIVE:
-                $n = 4;
-                break;
-            case $vocabulary->getTime() == Verb::TIME_PRESENT:
-                $slideTime = 6;
-                break;
-            case $vocabulary->getTime() == Verb::TIME_PAST && $vocabulary->getPerson() == 1:
-                $slideTime = 10;
-                break;
-            case $vocabulary->getTime() == Verb::TIME_PAST && $vocabulary->getPerson() == 2:
-                $slideTime = 14;
-                break;
-            case $vocabulary->getTime() == Verb::TIME_PAST && $vocabulary->getPerson() == 3:
-                $slideTime = 18;
-                break;
-            case $vocabulary->getTime() == Verb::TIME_FUTURE && $vocabulary->getPerson() == 1:
-                $slideTime = 22;
-                break;
-            case $vocabulary->getTime() == Verb::TIME_FUTURE && $vocabulary->getPerson() == 2:
-                $slideTime = 26;
-                break;
-            case $vocabulary->getTime() == Verb::TIME_FUTURE && $vocabulary->getPerson() == 3:
-                $slideTime = 30;
-                break;
-        }
-
-        return $n + $slideTime + $coefMascPlur;
+        return $timeShift + $positionShift;
     }
 }
