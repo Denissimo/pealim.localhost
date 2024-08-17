@@ -65,42 +65,52 @@ class Verb
 
     public static $timeShift = [
         self::INFINITIVE => ['shift' => 0, 'rus' => 'Инфинитив'],
-        self::TIME_PRESENT => ['shift' => 1, 'rus' => 'Настоящее'],
-        self::TIME_PAST => ['shift' => 5, 'rus' => 'Прошедщее'],
-        self::TIME_FUTURE => ['shift' => 14, 'rus' => 'Будущее'],
-        self::IMPERATIVE => ['shift' => 24, 'rus' => 'Повелительное'],
+        self::TIME_PRESENT => ['shift' => 2, 'rus' => 'Настоящее'],
+        self::TIME_PAST => ['shift' => 6, 'rus' => 'Прошедщее'],
+        self::TIME_FUTURE => ['shift' => 15, 'rus' => 'Будущее'],
+        self::IMPERATIVE => ['shift' => 25, 'rus' => 'Повелительное'],
     ];
 
 
     public static $positionShift = [
-        1 => [
+        0 => [
             0 => [
-                0 => ['shift' => 1, 'rus' => 'я &#128105;', 'heb' => 'אֲנִי'],
-                1 => ['shift' => 1, 'rus' => 'я &#129492;', 'heb' => 'אֲנִי'],
+                0 => ['shift' => 1, 'rus' => 'ты &#128105;', 'heb' => 'אַתְּ'],
+                1 => ['shift' => 0, 'rus' => 'ты &#129492;', 'heb' => 'אַתָהּ'],
             ],
             1 => [
-                0 => ['shift' => 2, 'rus' => 'мы &#128105;', 'heb' => 'אֲנַחנוּ'],
-                1 => ['shift' => 2, 'rus' => 'мы &#129492;', 'heb' => 'אֲנַחנוּ'],
+                0 => ['shift' => 3, 'rus' => 'вы &#128105;', 'heb' => 'אַתֶן'],
+                1 => ['shift' => 2, 'rus' => 'вы &#129492;', 'heb' => 'אַתֶם'],
+            ],
+        ],
+        1 => [
+            0 => [
+                0 => ['shift' => 0, 'rus' => 'я &#128105;', 'heb' => 'אֲנִי'],
+                1 => ['shift' => 0, 'rus' => 'я &#129492;', 'heb' => 'אֲנִי'],
+            ],
+            1 => [
+                0 => ['shift' => 1, 'rus' => 'мы &#128105;', 'heb' => 'אֲנַחנוּ'],
+                1 => ['shift' => 1, 'rus' => 'мы &#129492;', 'heb' => 'אֲנַחנוּ'],
             ],
         ],
         2 => [
             0 => [
-                0 => ['shift' => 4, 'rus' => 'ты &#128105;', 'heb' => 'אַתְּ'],
-                1 => ['shift' => 3, 'rus' => 'ты &#129492;', 'heb' => 'אַתָהּ'],
+                0 => ['shift' => 3, 'rus' => 'ты &#128105;', 'heb' => 'אַתְּ'],
+                1 => ['shift' => 2, 'rus' => 'ты &#129492;', 'heb' => 'אַתָהּ'],
             ],
             1 => [
-                0 => ['shift' => 6, 'rus' => 'вы &#128105;', 'heb' => 'אַתֶן'],
-                1 => ['shift' => 5, 'rus' => 'вы &#129492;', 'heb' => 'אַתֶם'],
+                0 => ['shift' => 5, 'rus' => 'вы &#128105;', 'heb' => 'אַתֶן'],
+                1 => ['shift' => 4, 'rus' => 'вы &#129492;', 'heb' => 'אַתֶם'],
             ],
         ],
         3 => [
             0 => [
-                0 => ['shift' => 8, 'rus' => 'она &#128105;', 'heb' => 'הִיא'],
-                1 => ['shift' => 7, 'rus' => 'он &#129492;', 'heb' => 'הוּא'],
+                0 => ['shift' => 7, 'rus' => 'она &#128105;', 'heb' => 'הִיא'],
+                1 => ['shift' => 6, 'rus' => 'он &#129492;', 'heb' => 'הוּא'],
             ],
             1 => [
-                0 => ['shift' => 10, 'rus' => 'они &#128105;', 'heb' => 'הֵן'],
-                1 => ['shift' => 9, 'rus' => 'они &#129492;', 'heb' => 'הֵם'],
+                0 => ['shift' => 9, 'rus' => 'они &#128105;', 'heb' => 'הֵן'],
+                1 => ['shift' => 8, 'rus' => 'они &#129492;', 'heb' => 'הֵם'],
             ],
         ],
     ];
@@ -110,9 +120,11 @@ class Verb
         return self::$masculine[$x];
     }
 
-    public static function isPlural(int $x): bool
+    public static function isPlural(TableCell $cell): bool
     {
-        return self::$plural[$x];
+        $shift = $cell->getColspan() + $cell->getX() -1;
+
+        return self::$plural[$shift];
     }
 
     public static function getTime(int $y): string

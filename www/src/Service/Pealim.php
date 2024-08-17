@@ -145,7 +145,7 @@ class Pealim
 
         foreach ($cellsTable as $cell) {
             $time = Verb::getTime($cell->getY());
-            $isPlural = $time == Verb::INFINITIVE ? null : Verb::isPlural($cell->getX());
+            $isPlural = $time == Verb::INFINITIVE ? null : Verb::isPlural($cell);
             $person = $time == Verb::INFINITIVE || $time == Verb::TIME_PRESENT ? null : Verb::getPerson($cell->getY());
             $isMasculine = $person == 1 || $time == Verb::INFINITIVE ? null : Verb::isMasculine($cell->getX());
             $word = $cell->getWord()->getHebrew();

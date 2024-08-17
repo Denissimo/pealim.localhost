@@ -73,9 +73,9 @@ class ExcelBuild
         $time = $vocabulary->getTime();
         $isPlural = (int)$vocabulary->isPlural();
         $isMasculine = (int)$vocabulary->isMasculine();
-        $person = $vocabulary->getPerson();
-        $timeShift = Verb::$timeShift[$time]['shift'] ?? 0;
-        $positionShift = Verb::$positionShift[$person][$isPlural][$isMasculine]['shift'] ?? 0;
+        $person = (int)$vocabulary->getPerson();
+        $timeShift = Verb::$timeShift[$time]['shift'];
+        $positionShift = Verb::$positionShift[$person][$isPlural][$isMasculine]['shift'];
 
         return $timeShift + $positionShift;
     }
