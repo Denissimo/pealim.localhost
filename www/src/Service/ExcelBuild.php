@@ -12,7 +12,7 @@ use \PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
 class ExcelBuild
 {
-    private const POS_START = 5;
+    private const POS_START = 4;
     private EntityManagerInterface $entityManager;
 
     /**
@@ -26,18 +26,17 @@ class ExcelBuild
     public function buildWordMatrix(): array
     {
         $words = [];
-        $row = 0;
+        $row = 1;
         $pealimBases = $this->entityManager->getRepository(PealimBase::class)->findAll();
 
         foreach ($pealimBases as $pealimBase) {
             $vocabularies = $pealimBase->getChildren();
             $row++;
-            $positionStart = 5;
             foreach ($vocabularies as $vocabulary) {
                 /** @var PealimVocabulary $vocabulary */
                 $position = $this->chooseColumn($vocabulary);
 //                $position++;
-                $positionShift = $positionStart + $position;
+                $positionShift = self::POS_START + $position;
                 $words[$row][$positionShift] = sprintf("%s\n%s", $vocabulary->getWord(), $vocabulary->getTranscription());
             }
             $words[$row][1] = $pealimBase->getSlug();
@@ -60,9 +59,26 @@ class ExcelBuild
                 $columnLetter = Coordinate::stringFromColumnIndex($column + 1);
                 $cellName = $columnLetter . ($row + 1);
                 $activeWorksheet->setCellValue($cellName, $word);
-                $activeWorksheet->getStyle('A1')->getAlignment()->setWrapText(true);
+                $activeWorksheet->getStyle($cellName)->getAlignment()->setWrapText(true);
             }
         }
+
+        foreach (Verb::$timeShift as $key => $time) {
+            $columnLetter = Coordinate::stringFromColumnIndex($time['shift'] + self::POS_START + 2);
+            $cellName = $columnLetter . '1';
+            $activeWorksheet->setCellValue($cellName, $time['rus']);
+            foreach (Verb::$positionShift as $person) {
+                foreach ($person as $plural) {
+                    foreach ($plural as $masculine) {
+                        $columnLetterPos = Coordinate::stringFromColumnIndex($time['shift'] + $masculine['shift'] + self::POS_START + 1);
+                        $cellNamePos = $columnLetterPos . '2';
+                        $activeWorksheet->setCellValue($cellNamePos, $masculine['heb']);
+                    }
+                }
+            }
+        }
+
+
 
         $writer = new Xlsx($spreadsheet);
         $writer->save('verbs.xlsx');
