@@ -34,6 +34,8 @@ RUN apt-get update && apt-get install -y \
     && pecl install xdebug \
     && docker-php-ext-enable xdebug
 
+RUN pecl install -o -f redis && rm -rf /tmp/pear && docker-php-ext-enable redis
+
 RUN docker-php-ext-configure intl --enable-intl && \
     docker-php-ext-configure gd --with-freetype --with-jpeg && \
     docker-php-ext-install -j$(nproc) gd && \
