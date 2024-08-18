@@ -165,6 +165,16 @@ class Pealim
 
         $this->entityManager->flush();
 
+        $vars = array_keys(get_defined_vars());
+        for ($i = 0; $i < sizeOf($vars); $i++) {
+            if ($vars[$i]=='cellsTable') {
+                continue;
+            }
+            $varName = $vars[$i];
+            unset($$varName);
+        }
+        unset($vars,$i, $varName);
+
         return count($cellsTable);
     }
 
@@ -244,14 +254,5 @@ class Pealim
         }
 
         return $tableCells;
-    }
-
-    public function saveVocabulatyUnit(TableCell $cell)
-    {
-        $vocabulatyUnit = new PealimVocabulary();
-        $word = $cell->getWord()->getHebrew();
-        $russian = $cell->getWord()->getTranscription();
-
-
     }
 }

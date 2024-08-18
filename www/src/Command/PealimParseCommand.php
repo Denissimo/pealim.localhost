@@ -43,6 +43,7 @@ class PealimParseCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        $mem1 = memory_get_usage();
         $io = new SymfonyStyle($input, $output);
         $arg1 = $input->getArgument('arg1');
 
@@ -72,10 +73,11 @@ class PealimParseCommand extends Command
 //            Path::normalize('zzz_'.random_int(0, 1000)),
 //        );
 //        die;
-        $content = $filesystem->readFile('public/vocabulary.txt');
-        $wordlist = explode("\r\n", $content);
+        $fileContent = $filesystem->readFile('public/vocabulary.txt');
+        $wordlist = explode("\r\n", $fileContent);
         $wordKeys = array_flip($wordlist);
         $lastWord = $client->get('last_word');
+        $numWord = (int)$client->get('num_word');
         $lastIndex = $lastWord ? $wordKeys[$lastWord] : 0;
         $word = $wordlist[$lastIndex];
         $counter = 0;
@@ -84,25 +86,39 @@ class PealimParseCommand extends Command
         $content = $this->pealimService->search($word);
         $cssClass = 'verb-search-result';
         $link = $this->pealimService->findLink($cssClass, $content);
+        $content = null;
+        unset($content);
         $isBaseExist = true;
         if (strlen($link)) {
-//                continue;
-            $wordFormContent = $this->pealimService->loadForms($link);
             $isBaseExist = $this->pealimService->checkBase($link);
+        } else {
+            $io->error("$numWord ($word) Does not exist");
         }
 
         if (!$isBaseExist) {
+            $wordFormContent = $this->pealimService->loadForms($link);
             $saved = $this->pealimService->parseForms($wordFormContent, $link);
-            $io->writeln("$counter) $link: Saved $saved forms");
+            $wordFormContent = null;
+            unset($wordFormContent);
+            $numWord++;
+            $mem2 = memory_get_usage();
+            $io->writeln("$numWord) $link: Saved $saved forms. Memory: 1- $mem1; 2- $mem2;");
+        }else {
+//            $io->warning("$numWord ($word) Already saved");
         }
 
 //        }
         if (isset($wordlist[$lastIndex + 1])) {
             $client->set('last_word', $wordlist[$lastIndex + 1]);
+            $client->set('num_word', $numWord);
             $this->runAgain($output);
         } else {
             $client->del('last_word');
+            $client->del('num_word');
         }
+        $wordlist = null;
+        unset($wordlist);
+
         $io->success('You have a new command! Now make it your own! Pass --help to see your options.');
 
         return Command::SUCCESS;
@@ -111,10 +127,9 @@ class PealimParseCommand extends Command
     private function runAgain(OutputInterface $output): void
     {
         $greetInput = new ArrayInput([
-            // имя команды передается в качестве первого аргумента
             'command' => 'pealim:parse'
         ]);
 
-        $returnCode = $this->getApplication()->doRun($greetInput, $output);
+        $returnCode = $this->getApplication()->run($greetInput, $output);
     }
 }

@@ -9,6 +9,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use \PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use \PhpOffice\PhpSpreadsheet\RichText\RichText;
+use \PhpOffice\PhpSpreadsheet\Style\Color;
 
 class ExcelBuild
 {
@@ -27,6 +29,7 @@ class ExcelBuild
     {
         $words = [];
         $row = 1;
+
         $pealimBases = $this->entityManager->getRepository(PealimBase::class)->findAll();
 
         foreach ($pealimBases as $pealimBase) {
@@ -35,7 +38,6 @@ class ExcelBuild
             foreach ($vocabularies as $vocabulary) {
                 /** @var PealimVocabulary $vocabulary */
                 $position = $this->chooseColumn($vocabulary);
-//                $position++;
                 $positionShift = self::POS_START + $position;
                 $words[$row][$positionShift] = sprintf("%s\n%s", $vocabulary->getWord(), $vocabulary->getTranscription());
             }
@@ -43,6 +45,20 @@ class ExcelBuild
             $words[$row][2] = $pealimBase->getForm();
             $words[$row][3] = $pealimBase->getRoot();
             $words[$row][4] = $pealimBase->getTranslation();
+        }
+
+        foreach ($vocabularies as $vocabulary) {
+            /** @var PealimVocabulary $vocabulary */
+            $position = $this->chooseColumn($vocabulary);
+            $pronoun = $this->choosePronun($vocabulary);
+//                $position++;
+            $positionShift = self::POS_START + $position;
+            $words[1][$positionShift] = $pronoun;
+        }
+
+        foreach (Verb::$timeShift as $timeShift) {
+            $positionShift = self::POS_START + $timeShift['shift'];
+            $words[0][$positionShift] = $timeShift['rus'];
         }
 
         return $words;
@@ -58,27 +74,39 @@ class ExcelBuild
             foreach ($wordList as $column => $word) {
                 $columnLetter = Coordinate::stringFromColumnIndex($column + 1);
                 $cellName = $columnLetter . ($row + 1);
-                $activeWorksheet->setCellValue($cellName, $word);
+                $richText = new RichText();
+                preg_match_all('/([^\[]*)\[([^\]]*)\](.*)/', $word, $matches, PREG_SET_ORDER);
+                if (count($matches) > 0) {
+                    $richText->createText($matches[0][1]);
+                    $payable = $richText->createTextRun($matches[0][2]);
+                    $payable->getFont()->setBold(true);
+//                    $payable->getFont()->setItalic(true);
+                    $payable->getFont()->setColor(new Color(Color::COLOR_RED));
+                    $richText->createText($matches[0][3]);
+
+                } else {
+                    $richText->createText($word);
+                }
+                $spreadsheet->getActiveSheet()->getCell($cellName)->setValue($richText);
+//                $activeWorksheet->setCellValue($cellName, $word);
                 $activeWorksheet->getStyle($cellName)->getAlignment()->setWrapText(true);
             }
         }
 
-        foreach (Verb::$timeShift as $key => $time) {
-            $columnLetter = Coordinate::stringFromColumnIndex($time['shift'] + self::POS_START + 2);
-            $cellName = $columnLetter . '1';
-            $activeWorksheet->setCellValue($cellName, $time['rus']);
-            foreach (Verb::$positionShift as $person) {
-                foreach ($person as $plural) {
-                    foreach ($plural as $masculine) {
-                        $columnLetterPos = Coordinate::stringFromColumnIndex($time['shift'] + $masculine['shift'] + self::POS_START + 1);
-                        $cellNamePos = $columnLetterPos . '2';
-                        $activeWorksheet->setCellValue($cellNamePos, $masculine['heb']);
-                    }
-                }
-            }
-        }
-
-
+//        foreach (Verb::$timeShift as $key => $time) {
+//            $columnLetter = Coordinate::stringFromColumnIndex($time['shift'] + self::POS_START + 2);
+//            $cellName = $columnLetter . '1';
+//            $activeWorksheet->setCellValue($cellName, $time['rus']);
+//            foreach (Verb::$positionShift as $person) {
+//                foreach ($person as $plural) {
+//                    foreach ($plural as $masculine) {
+//                        $columnLetterPos = Coordinate::stringFromColumnIndex($time['shift'] + $masculine['shift'] + self::POS_START + 1);
+//                        $cellNamePos = $columnLetterPos . '2';
+//                        $activeWorksheet->setCellValue($cellNamePos, $masculine['heb']);
+//                    }
+//                }
+//            }
+//        }
 
         $writer = new Xlsx($spreadsheet);
         $writer->save('verbs.xlsx');
@@ -94,5 +122,16 @@ class ExcelBuild
         $positionShift = Verb::$positionShift[$person][$isPlural][$isMasculine]['shift'];
 
         return $timeShift + $positionShift;
+    }
+
+    private function choosePronun(PealimVocabulary $vocabulary): string
+    {
+        $isPlural = (int)$vocabulary->isPlural();
+        $isMasculine = (int)$vocabulary->isMasculine();
+        $person = (int)$vocabulary->getPerson();
+        $pronoun = Verb::$positionShift[$person][$isPlural][$isMasculine]['rus'] . "\n"
+            . Verb::$positionShift[$person][$isPlural][$isMasculine]['heb'];
+
+        return $pronoun;
     }
 }
