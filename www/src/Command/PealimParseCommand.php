@@ -104,7 +104,7 @@ class PealimParseCommand extends Command
             $mem2 = memory_get_usage();
             $io->writeln("$numWord) $link: Saved $saved forms. Memory: 1- $mem1; 2- $mem2;");
         }else {
-//            $io->warning("$numWord ($word) Already saved");
+            $io->warning("$numWord: $word - Already saved");
         }
 
 //        }

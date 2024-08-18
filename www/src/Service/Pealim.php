@@ -13,6 +13,7 @@ use App\Entity\PealimVocabulary;
 
 class Pealim
 {
+    private const ROWS_NORMAL = 9;
     private EntityManagerInterface $entityManager;
 
     private HttpClientInterface $client;
@@ -108,8 +109,9 @@ class Pealim
             $headTd[] = $td;
         }
         $bodyTd = [];
+        $rowsDiff = self::ROWS_NORMAL - count($bodyTr);
         foreach ($bodyTr as $level => $tr) {
-            $td = $this->parseTd($tr, $level);
+            $td = $this->parseTd($tr, $level + $rowsDiff);
             $columns = count($td);
             $maxColumns = max($columns, $maxColumns);
             $bodyTd[] = $td;

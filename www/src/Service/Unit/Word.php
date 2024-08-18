@@ -17,7 +17,7 @@ class Word
         preg_match_all($hebrewTpl, $contentReplaced, $hebrew);
         preg_match_all($transTpl, $contentReplaced, $trans);
 //        $this->hebrew = implode('', $hebrew[0]);
-        $this->hebrew = $hebrew[1][0] ?? '';
+        $this->hebrew = preg_replace('/&rlm;/', '', $hebrew[1][0] ?? '');
         $this->transcription = $trans[1][0] ?? '';
     }
 
