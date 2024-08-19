@@ -168,14 +168,14 @@ class Pealim
         $this->entityManager->flush();
 
         $vars = array_keys(get_defined_vars());
-        for ($i = 0; $i < sizeOf($vars); $i++) {
-            if ($vars[$i]=='cellsTable') {
-                continue;
+        foreach ($vars as $var) {
+            if ($var != 'cellsTable') {
+                $$var = null;
+                unset($$var);
             }
-            $varName = $vars[$i];
-            unset($$varName);
         }
-        unset($vars,$i, $varName);
+
+        unset($vars);
 
         return count($cellsTable);
     }

@@ -62,7 +62,7 @@ class PealimParseCommand extends Command
 
 //        $redis->connect('127.0.0.1', 6379);
 //        $ans = $redis->ping();
-        $client = RedisAdapter::createConnection('redis://pealim@host.docker.internal:6370');
+        $client = RedisAdapter::createConnection('redis://pealim@host.docker.internal:6371');
         $z = $client->get('test01');
 //        $client->set('test1', 'asdf');
 //        $cache = new RedisTagAwareAdapter($client);
@@ -111,6 +111,16 @@ class PealimParseCommand extends Command
         if (isset($wordlist[$lastIndex + 1])) {
             $client->set('last_word', $wordlist[$lastIndex + 1]);
             $client->set('num_word', $numWord);
+            $vars = array_keys(get_defined_vars());
+            foreach ($vars as $var) {
+                if ($var != 'output') {
+                    $$var = null;
+                    unset($$var);
+                }
+            }
+
+            unset($vars);
+
             $this->runAgain($output);
         } else {
             $client->del('last_word');

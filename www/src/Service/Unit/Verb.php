@@ -2,8 +2,6 @@
 
 namespace App\Service\Unit;
 
-use App\Entity\PealimVocabulary;
-
 class Verb
 {
     public const INFINITIVE = 'infinitive';
@@ -115,6 +113,14 @@ class Verb
         ],
     ];
 
+    private static $binyan = [
+        'ПИЭЛЬ' => ['heb' => 'פִּעֵל', 'color' => 'CCFFCC'],
+        'hИФЪИЛЬ' => ['heb' => 'הִפְעִיל', 'color' => 'FFE0FF'],
+        'hИТПАЭЛЬ' => ['heb' => 'הִתְפַּעֵל', 'color' => 'FFFFCC'],
+        'НИФЪАЛЬ' => ['heb' => 'הִפְעִיל', 'color' => 'CCCCFF'],
+        'ПААЛЬ' => ['heb' => 'פָּעַל', 'color' => 'CCECFF']
+    ];
+
     public static function isMasculine(int $x): bool
     {
         return self::$masculine[$x];
@@ -122,7 +128,7 @@ class Verb
 
     public static function isPlural(TableCell $cell): bool
     {
-        $shift = $cell->getColspan() + $cell->getX() -1;
+        $shift = $cell->getColspan() + $cell->getX() - 1;
 
         return self::$plural[$shift];
     }
@@ -135,5 +141,10 @@ class Verb
     public static function getPerson(int $y): ?int
     {
         return self::$person[$y];
+    }
+
+    public static function getBinyanColor(string $binyan): string
+    {
+        return self::$binyan[$binyan]['color'];
     }
 }

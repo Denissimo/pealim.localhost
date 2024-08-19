@@ -71,6 +71,6 @@ services:
     environment:
       - REDIS_PASSWORD=pealim
     ports:
-      - 6370:6379
+      - 6371:6379
     networks:
       - default

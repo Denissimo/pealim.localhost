@@ -11,10 +11,12 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use \PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use \PhpOffice\PhpSpreadsheet\RichText\RichText;
 use \PhpOffice\PhpSpreadsheet\Style\Color;
+use \PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class ExcelBuild
 {
-    private const POS_START = 4;
+    private const POS_START = 3;
+    private const POS_FORM = 1;
     private EntityManagerInterface $entityManager;
 
     /**
@@ -41,10 +43,10 @@ class ExcelBuild
                 $positionShift = self::POS_START + $position;
                 $words[$row][$positionShift] = sprintf("%s\n%s", $vocabulary->getWord(), $vocabulary->getTranscription());
             }
-            $words[$row][1] = $pealimBase->getSlug();
-            $words[$row][2] = $pealimBase->getForm();
-            $words[$row][3] = $pealimBase->getRoot();
-            $words[$row][4] = $pealimBase->getTranslation();
+            $words[$row][0] = $row - 1;
+            $words[$row][self::POS_FORM] = $pealimBase->getForm();
+            $words[$row][2] = $pealimBase->getRoot();
+            $words[$row][3] = ['link' => $pealimBase->getSlug(), 'text' => $pealimBase->getTranslation()];
         }
 
         foreach ($vocabularies as $vocabulary) {
@@ -71,10 +73,20 @@ class ExcelBuild
         $activeWorksheet = $spreadsheet->getActiveSheet();
 
         foreach ($wordMatrix as $row => $wordList) {
+            $rownumber = $row + 1;
             foreach ($wordList as $column => $word) {
                 $columnLetter = Coordinate::stringFromColumnIndex($column + 1);
-                $cellName = $columnLetter . ($row + 1);
+                $cellName = $columnLetter . ($rownumber);
                 $richText = new RichText();
+                if (is_array($word)) {
+                    $richText->createText($word['text']);
+                    $cell = $spreadsheet->getActiveSheet()->getCell($cellName);
+                    $cell->setValue($richText);
+                    $url = 'https://www.pealim.com' . $word['link'];
+                    $cell->getHyperlink()->setUrl($url);
+//                    $activeWorksheet->getStyle($cellName)->getAlignment()->setWrapText(true);
+                    continue;
+                }
                 preg_match_all('/([^\[]*)\[([^\]]*)\](.*)/', $word, $matches, PREG_SET_ORDER);
                 if (count($matches) > 0) {
                     $richText->createText($matches[0][1]);
@@ -90,6 +102,18 @@ class ExcelBuild
                 $spreadsheet->getActiveSheet()->getCell($cellName)->setValue($richText);
 //                $activeWorksheet->setCellValue($cellName, $word);
                 $activeWorksheet->getStyle($cellName)->getAlignment()->setWrapText(true);
+            }
+            if (isset($wordList[self::POS_FORM])) {
+                $cellsDiiapasone = sprintf('A%d:D%d', $rownumber, $rownumber);
+                $binyan = $wordList[self::POS_FORM];
+                $color = Verb::getBinyanColor($binyan);
+
+                $spreadsheet->getActiveSheet()
+                    ->getStyle($cellsDiiapasone)
+                    ->getFill()
+                    ->setFillType(Fill::FILL_SOLID)
+                    ->getStartColor()
+                    ->setRGB($color);
             }
         }
 
@@ -109,7 +133,7 @@ class ExcelBuild
 //        }
 
         $writer = new Xlsx($spreadsheet);
-        $writer->save('verbs.xlsx');
+        $writer->save('public/verbs.xlsx');
     }
 
     private function chooseColumn(PealimVocabulary $vocabulary): int
