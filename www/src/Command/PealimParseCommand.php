@@ -37,7 +37,8 @@ class PealimParseCommand extends Command
     protected function configure(): void
     {
         $this
-            ->addArgument('arg1', InputArgument::OPTIONAL, 'Argument description')
+            ->addArgument('last_word', InputArgument::OPTIONAL, 'Previous word scanned')
+            ->addArgument('num_word', InputArgument::OPTIONAL, 'Previous word number')
             ->addOption('option1', null, InputOption::VALUE_NONE, 'Option description');
     }
 
@@ -45,11 +46,9 @@ class PealimParseCommand extends Command
     {
         $mem1 = memory_get_usage();
         $io = new SymfonyStyle($input, $output);
-        $arg1 = $input->getArgument('arg1');
+        $lastWord = $input->getArgument('last_word') ?? null;
+        $numWord = $input->getArgument('num_word') ?? 0;
 
-        if ($arg1) {
-            $io->note(sprintf('You passed an argument: %s', $arg1));
-        }
 
         if ($input->getOption('option1')) {
             // ...
@@ -76,8 +75,8 @@ class PealimParseCommand extends Command
         $fileContent = $filesystem->readFile('public/vocabulary.txt');
         $wordlist = explode("\r\n", $fileContent);
         $wordKeys = array_flip($wordlist);
-        $lastWord = $client->get('last_word');
-        $numWord = (int)$client->get('num_word');
+//        $lastWord = $client->get('last_word');
+//        $numWord = (int)$client->get('num_word');
         $lastIndex = $lastWord ? $wordKeys[$lastWord] : 0;
         $word = $wordlist[$lastIndex];
         $counter = 0;
@@ -111,6 +110,12 @@ class PealimParseCommand extends Command
         if (isset($wordlist[$lastIndex + 1])) {
             $client->set('last_word', $wordlist[$lastIndex + 1]);
             $client->set('num_word', $numWord);
+            $message = [
+                'command' => 'pealim:parse',
+                'last_word' => $wordlist[$lastIndex + 1],
+                'num_word' =>  $numWord
+            ];
+            $this->runNext($message);
             $vars = array_keys(get_defined_vars());
             foreach ($vars as $var) {
                 if ($var != 'output') {
@@ -121,7 +126,8 @@ class PealimParseCommand extends Command
 
             unset($vars);
 
-            $this->runAgain($output);
+
+//            $this->runAgain($output);
         } else {
             $client->del('last_word');
             $client->del('num_word');
@@ -132,6 +138,13 @@ class PealimParseCommand extends Command
         $io->success('You have a new command! Now make it your own! Pass --help to see your options.');
 
         return Command::SUCCESS;
+    }
+
+    private function runNext(array $message): void
+    {
+        $this->getName()
+            ->get('old_sound_rabbit_mq.run_pealim_parse')
+            ->publish(serialize($message));
     }
 
     private function runAgain(OutputInterface $output): void

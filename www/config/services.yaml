@@ -13,6 +13,11 @@ services:
 
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
+    pealim:
+        class: App\Service\Pealim
+        arguments:
+            - @doctrine.orm.entity_manager
+            - @old_sound_rabbit_mq.run_pealim_parse
     App\:
         resource: '../src/'
         exclude:
