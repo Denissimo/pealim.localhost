@@ -72,6 +72,9 @@ class PealimParseCommand extends Command
 //            Path::normalize('zzz_'.random_int(0, 1000)),
 //        );
 //        die;
+
+
+        $producer = $this->getApplication()->get('old_sound_rabbit_mq.run_pealim_parse_producer');
         $fileContent = $filesystem->readFile('public/vocabulary.txt');
         $wordlist = explode("\r\n", $fileContent);
         $wordKeys = array_flip($wordlist);
@@ -142,8 +145,7 @@ class PealimParseCommand extends Command
 
     private function runNext(array $message): void
     {
-        $this->getName()
-            ->get('old_sound_rabbit_mq.run_pealim_parse')
+        $this->pealimService
             ->publish(serialize($message));
     }
 

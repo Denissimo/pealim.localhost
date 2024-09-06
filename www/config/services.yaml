@@ -16,8 +16,7 @@ services:
     pealim:
         class: App\Service\Pealim
         arguments:
-            - @doctrine.orm.entity_manager
-            - @old_sound_rabbit_mq.run_pealim_parse
+            - '@doctrine.orm.entity_manager'
     App\:
         resource: '../src/'
         exclude:
@@ -27,3 +26,15 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+    PhpAmqpLib\Connection\AbstractConnection: '@App\Service\RabbitMqConnection'
+
+    PhpAmqpLib\Wire\IO\SocketIO:
+        arguments:
+            $host: '%env(RABBITMQ_HOST)%'
+            $port: '%env(int:RABBITMQ_PORT)%'
+
+    App\Service\RabbitMqConnection:
+        arguments:
+            $user: '%env(RABBITMQ_LOGIN)%'
+            $password: '%env(RABBITMQ_PASSWORD)%'
+            $io: '@PhpAmqpLib\Wire\IO\SocketIO'

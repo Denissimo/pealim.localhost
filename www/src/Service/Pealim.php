@@ -10,21 +10,24 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Service\Unit\Word;
 use App\Entity\PealimVocabulary;
+use OldSound\RabbitMqBundle\RabbitMq\ProducerInterface;
+use App\Service\PealimProcess;
 
 class Pealim
 {
     private const ROWS_NORMAL = 9;
     private EntityManagerInterface $entityManager;
-
     private HttpClientInterface $client;
+    private PealimProcess $producer;
 
     /**
      * @param EntityManagerInterface $entityManager
      */
-    public function __construct(EntityManagerInterface $entityManager)
+    public function __construct(EntityManagerInterface $entityManager, PealimProcess $producer)
     {
         $this->entityManager = $entityManager;
         $this->client = HttpClient::create();
+        $this->producer = $producer;
     }
 
     public function search(string $word)
@@ -256,5 +259,10 @@ class Pealim
         }
 
         return $tableCells;
+    }
+
+    public function publish(string $message)
+    {
+        $this->producer->publish($message);
     }
 }

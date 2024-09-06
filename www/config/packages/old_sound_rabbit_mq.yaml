@@ -11,6 +11,7 @@ old_sound_rabbit_mq:
         # use 'old_sound_rabbit_mq.task_producer' service to send data.
         run_pealim_parse:
             connection:       default
+            class: App\Service\PealimProcess
             exchange_options: { name: 'run_pealim_parse', type: direct }
     consumers:
 #        task:

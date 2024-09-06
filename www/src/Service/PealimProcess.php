@@ -2,7 +2,9 @@
 
 namespace App\Service;
 
-class PealimProcess
+use \OldSound\RabbitMqBundle\RabbitMq\Producer;
+
+class PealimProcess extends Producer
 {
 
 }
