@@ -18,6 +18,7 @@ RUN apt-get update && apt-get install -y \
         libfreetype6-dev \
         libjpeg62-turbo-dev \
         libonig-dev \
+        librabbitmq-dev \
                  icu-devtools \
                  libicu-dev \
                  libmcrypt4 \
@@ -35,10 +36,12 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-enable xdebug
 
 RUN pecl install -o -f redis && rm -rf /tmp/pear && docker-php-ext-enable redis
+RUN pecl install amqp
 
 RUN docker-php-ext-configure intl --enable-intl && \
     docker-php-ext-configure gd --with-freetype --with-jpeg && \
     docker-php-ext-install -j$(nproc) gd && \
+    docker-php-ext-enable amqp && \
     docker-php-ext-install  \
         intl iconv mbstring \
         zip pcntl \
