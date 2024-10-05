@@ -16,6 +16,8 @@ class Pealim
     private const ROWS_NORMAL = 9;
     private EntityManagerInterface $entityManager;
 
+    public string $text;
+
     private HttpClientInterface $client;
 
     /**
@@ -25,6 +27,7 @@ class Pealim
     {
         $this->entityManager = $entityManager;
         $this->client = HttpClient::create();
+        $this->text = 'asdf';
     }
 
     public function search(string $word)
