@@ -10,6 +10,12 @@ framework:
                 retry_strategy:
                     max_retries: 3
                     multiplier: 2
+            pealim_parse:
+                dsn: '%env(PEALIM_PARSE_TRANSPORT_DSN)%'
+                options:
+                retry_strategy:
+                    max_retries: 3
+                    multiplier: 2
             failed: 'doctrine://default?queue_name=failed'
             # sync: 'sync://'
 
@@ -19,11 +25,11 @@ framework:
             messenger.bus.default: []
 
         routing:
-            App\Message\SampleMessage: async
             Symfony\Component\Mailer\Messenger\SendEmailMessage: async
             Symfony\Component\Notifier\Message\ChatMessage: async
             Symfony\Component\Notifier\Message\SmsMessage: async
             App\Message\TestMessage: async
+            App\Message\PealimParse: pealim_parse
 
             # Route your messages to the transports
             # 'App\Message\YourMessage': async

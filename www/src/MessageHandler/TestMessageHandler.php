@@ -11,5 +11,6 @@ final class TestMessageHandler
     public function __invoke(TestMessage $message): void
     {
         // do something with your message
+        echo "\n\n$message\n\n";
     }
 }

@@ -4,13 +4,18 @@ namespace App\Message;
 
 final class TestMessage
 {
-    /*
-     * Add whatever properties and methods you need
-     * to hold the data for this message class.
-     */
+    private string $message;
 
-    // public function __construct(
-    //     public readonly string $name,
-    // ) {
-    // }
+    /**
+     * @param string $message
+     */
+    public function __construct(string $message)
+    {
+        $this->message = $message;
+    }
+
+    public function __toString(): string
+    {
+        return $this->message;
+    }
 }
