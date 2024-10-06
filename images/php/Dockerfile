@@ -1,6 +1,6 @@
 # Для начала указываем исходный образ, он будет использован как основа
 FROM composer:latest AS composer
-FROM php:8-fpm
+FROM php:8.3-fpm
 
 COPY --from=composer /usr/bin/composer /usr/bin/composer
 
