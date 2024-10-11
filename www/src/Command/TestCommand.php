@@ -9,20 +9,16 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use App\Service\Pealim;
 
 #[AsCommand(
-    name: 'rabbit:run',
+    name: 'test:command',
     description: 'Add a short description for your command',
 )]
-class RunRabbitCommand extends Command
+class TestCommand extends Command
 {
-    private Pealim $pealimService;
-
-    public function __construct(Pealim $pealimService)
+    public function __construct()
     {
         parent::__construct();
-        $this->pealimService = $pealimService;
     }
 
     protected function configure(): void
@@ -46,22 +42,8 @@ class RunRabbitCommand extends Command
             // ...
         }
 
-        $message = [
-            'command' => 'rabbit:test',
-            'last_word' => 123,
-            'num_word' =>  222
-        ];
-//        $this->runNext($message);
-        //curl -i -u den:123456 -XPUT -H "Content-Type:application/json" -d '{"auto_delete":false,"durable":true}' http://localhost:15672/api/queues/testhost/testqueue2
-
         $io->success('You have a new command! Now make it your own! Pass --help to see your options.');
 
         return Command::SUCCESS;
     }
-
-//    private function runNext(array $message): void
-//    {
-//        $this->pealimService
-//            ->publish(serialize($message));
-//    }
 }
