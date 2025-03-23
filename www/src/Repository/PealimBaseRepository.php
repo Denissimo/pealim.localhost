@@ -3,8 +3,10 @@
 namespace App\Repository;
 
 use App\Entity\PealimBase;
+use App\Service\Unit\Verb;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use App\Entity\PealimVocabulary;
 
 /**
  * @extends ServiceEntityRepository<PealimBase>
@@ -16,6 +18,14 @@ class PealimBaseRepository extends ServiceEntityRepository
         parent::__construct($registry, PealimBase::class);
     }
 
+    public function loadStandartVocabulary()
+    {
+        return $this->createQueryBuilder('p')->select('p.*')
+            ->leftJoin(PealimVocabulary::class, 'v', 'WITH', 'p.id = v.pealim_vocabulary_id')
+            ->setParameter('time', [Verb::INFINITIVE, Verb::TIME_PRESENT])
+            ->orderBy('v.time','DESC')
+            ->getQuery();
+    }
     //    /**
     //     * @return PealimBase[] Returns an array of PealimBase objects
     //     */

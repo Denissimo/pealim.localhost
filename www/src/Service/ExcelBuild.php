@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\PealimBase;
 use App\Entity\PealimVocabulary;
+use App\Repository\PealimBaseRepository;
 use App\Service\Unit\Verb;
 use Doctrine\ORM\EntityManagerInterface;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -25,6 +26,89 @@ class ExcelBuild
     public function __construct(EntityManagerInterface $entityManager)
     {
         $this->entityManager = $entityManager;
+    }
+
+    public function loadStandart(): array
+    {
+        $words = [];
+        $row = 1;
+
+        $pealimVocs = $this->entityManager->createQueryBuilder()
+            ->select('v')
+            ->from(PealimVocabulary::class, 'v')
+            ->where('v.time IN(:time)')
+            ->setParameter('time', [Verb::INFINITIVE, Verb::TIME_PRESENT])
+            ->addOrderBy('v.pealimBase','ASC')
+            ->addOrderBy('v.isPlural','ASC')
+            ->addOrderBy('v.time', 'DESC');
+
+//            ->getRepository(PealimBaseRepository::class);
+
+        $vocList = $pealimVocs->getQuery()->getResult();
+        $verbs = [];
+        /** @var PealimVocabulary $word */
+        foreach ($vocList as $word) {
+            $base = $word->getPealimBase();
+            $current = [];
+            $current['word'] = $word->getWord();
+            $current['transcription'] = $word->getTranscription();
+            $current['translation'] = $base->getTranslation();
+            $gender = $word->isMasculine() ? 'м' : 'ж';
+            $current['gender'] = $word->getTime() == 'infinitive' ? 'и' : $gender;
+
+            $verbs[] = $current;
+        }
+
+        return $verbs;
+    }
+
+    private function formatCell(string $word): RichText
+    {
+        $richText = new RichText();
+        preg_match_all('/([^\[]*)\[([^\]]*)\](.*)/', $word, $matches, PREG_SET_ORDER);
+        if (count($matches) > 0) {
+            $richText->createText($matches[0][1]);
+            $payable = $richText->createTextRun($matches[0][2]);
+            $payable->getFont()->setBold(true);
+            $payable->getFont()->setColor(new Color(Color::COLOR_RED));
+            $richText->createText($matches[0][3]);
+
+        } else {
+            $richText->createText($word);
+        }
+
+        return $richText;
+    }
+
+    public function generateStandart()
+    {
+        $wordMatrix = $this->loadStandart();
+
+        $spreadsheet = new Spreadsheet();
+        $activeWorksheet = $spreadsheet->getActiveSheet();
+
+        foreach ($wordMatrix as $row => $wordData) {
+            $rownumber = $row + 1;
+            $cell = $spreadsheet->getActiveSheet()->getCell("C{$rownumber}");
+            $richText = $this->formatCell($wordData['word']);
+            $cell->setValue($richText);
+
+            $cell = $spreadsheet->getActiveSheet()->getCell("D{$rownumber}");
+            $richText = $this->formatCell($wordData['transcription']);
+            $cell->setValue($richText);
+
+            $cell = $spreadsheet->getActiveSheet()->getCell("E{$rownumber}");
+            $richText = $this->formatCell($wordData['translation']);
+            $cell->setValue($richText);
+
+            $cell = $spreadsheet->getActiveSheet()->getCell("F{$rownumber}");
+            $richText = $this->formatCell($wordData['gender']);
+            $cell->setValue($richText);
+
+        }
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('public/vocabul.xlsx');
     }
 
     public function buildWordMatrix(): array
@@ -66,7 +150,7 @@ class ExcelBuild
         return $words;
     }
 
-    public function generate()
+    public function generateCommon()
     {
         $wordMatrix = $this->buildWordMatrix();
         $spreadsheet = new Spreadsheet();
@@ -133,7 +217,7 @@ class ExcelBuild
 //        }
 
         $writer = new Xlsx($spreadsheet);
-        $writer->save('public/verbs.xlsx');
+        $writer->save('public/verbs0.xlsx');
     }
 
     private function chooseColumn(PealimVocabulary $vocabulary): int

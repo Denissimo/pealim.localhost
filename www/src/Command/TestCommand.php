@@ -9,22 +9,16 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use App\Service\ExcelBuild;
 
 #[AsCommand(
-    name: 'pealim:excel',
+    name: 'pealim:test',
     description: 'Add a short description for your command',
 )]
-class GenerateExcelPealimCommand extends Command
+class TestCommand extends Command
 {
-    private ExcelBuild $excelBuild;
-
-    public function __construct(ExcelBuild $excelBuild)
+    public function __construct()
     {
         parent::__construct();
-        $this->excelBuild = $excelBuild;
     }
 
     protected function configure(): void
@@ -40,17 +34,13 @@ class GenerateExcelPealimCommand extends Command
         $io = new SymfonyStyle($input, $output);
         $arg1 = $input->getArgument('arg1');
 
-//        if ($arg1) {
-//            $io->note(sprintf('You passed an argument: %s', $arg1));
-//        }
-//
-//        if ($input->getOption('option1')) {
-//            // ...
-//        }
-        $this->excelBuild->generateCommon();
+        if ($arg1) {
+            $io->note(sprintf('You passed an argument: %s', $arg1));
+        }
 
-
-
+        if ($input->getOption('option1')) {
+            // ...
+        }
 
         $io->success('You have a new command! Now make it your own! Pass --help to see your options.');
 

@@ -14,10 +14,10 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use App\Service\ExcelBuild;
 
 #[AsCommand(
-    name: 'pealim:excel',
+    name: 'pealim:vocab',
     description: 'Add a short description for your command',
 )]
-class GenerateExcelPealimCommand extends Command
+class GenerateExcelVocabularyCommand extends Command
 {
     private ExcelBuild $excelBuild;
 
@@ -47,7 +47,7 @@ class GenerateExcelPealimCommand extends Command
 //        if ($input->getOption('option1')) {
 //            // ...
 //        }
-        $this->excelBuild->generateCommon();
+        $this->excelBuild->generateStandart();
 
 
 

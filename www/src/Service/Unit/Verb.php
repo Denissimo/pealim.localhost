@@ -114,6 +114,7 @@ class Verb
     ];
 
     private static $binyan = [
+        '' => ['heb' => '', 'color' => 'CCCCCC'],
         'ПИЭЛЬ' => ['heb' => 'פִּעֵל', 'color' => 'CCFFCC'],
         'hИФЪИЛЬ' => ['heb' => 'הִפְעִיל', 'color' => 'FFE0FF'],
         'hИТПАЭЛЬ' => ['heb' => 'הִתְפַּעֵל', 'color' => 'FFFFCC'],

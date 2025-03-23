@@ -20,6 +20,22 @@ class PealimVocabularyRepository extends ServiceEntityRepository
      * @return PealimVocabulary[]|array Returns an array of PealimVocabulary objects
      */
 
+        /**
+         * @return PealimVocabulary[] Returns an array of PealimVocabulary objects
+         */
+        public function loadStandart(): array
+        {
+            return $this->createQueryBuilder('p')
+                ->andWhere('p.time IN(:time)')
+                ->setParameter('time', $value)
+                ->orderBy('p.id', 'ASC')
+                ->setMaxResults(10)
+                ->getQuery()
+                ->getResult()
+            ;
+        }
+
+
     //    /**
     //     * @return PealimVocabulary[] Returns an array of PealimVocabulary objects
     //     */
