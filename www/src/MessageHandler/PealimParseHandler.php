@@ -26,20 +26,22 @@ final class PealimParseHandler
         $word = $message->getWord();
         $content = $this->pealimService->search($word);
         $cssClass = 'verb-search-result';
-        $link = $this->pealimService->findLink($cssClass, $content);
-        $isBaseExist = true;
-        if (strlen($link)) {
-            $isBaseExist = $this->pealimService->checkBase($link);
-        } else {
-            echo "\n$word Does not exist";
-        }
+        $links = $this->pealimService->findLink($cssClass, $content);
+        foreach ($links as $link) {
+            $isBaseExist = true;
+            if (strlen($link)) {
+                $isBaseExist = $this->pealimService->checkBase($link);
+            } else {
+                echo "\n$word exist";
+            }
 
-        if (!$isBaseExist) {
-            $wordFormContent = $this->pealimService->loadForms($link);
-            $saved = $this->pealimService->parseForms($wordFormContent, $link);
-            echo "\n$link: Saved $saved forms.";
-        }else {
-            echo "\n$word - Already saved";
+            if (!$isBaseExist) {
+                $wordFormContent = $this->pealimService->loadForms($link);
+                $saved = $this->pealimService->parseForms($wordFormContent, $link);
+                echo "\n$link: Saved $saved forms.";
+            } else {
+                echo "\n$word - Already saved";
+            }
         }
     }
 }

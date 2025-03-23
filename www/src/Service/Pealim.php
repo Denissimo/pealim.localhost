@@ -20,6 +20,22 @@ class Pealim
 
     private HttpClientInterface $client;
 
+//</h2><p>Глагол – <b>ПААЛЬ</b></p><p>Корень: <span class="menukad"><a href="/ru/dict/?num-radicals=3&amp;r1=ר&amp;r2=ז&amp;rf=י">ר - ז - ה</a></span></p>
+//</h2><p>Прилагательное – <a href="/ru/dict/?pos=adjective&amp;am=qatel">модель <i>катель</i></a></p><p>Корень: <span class="menukad"><a href="/ru/dict/?num-radicals=3&amp;r1=ר&amp;r2=ז&amp;rf=י">ר - ז - ה</a></span></p>
+//</h2><p>Существительное – мужской род</p>
+//</h2><p>Существительное – <a href="/ru/dict/?pos=noun&amp;nm=qtila">модель <i>ктила</i></a>, женский род</p><p>Корень: <span class="menukad"><a href="/ru/dict/?num-radicals=3&amp;r1=שׂ&amp;r2=י&amp;rf=ח">שׂ - י - ח</a></span></p>
+//</h2><p>Наречие</p>
+//</h2><p>Наречие</p><p>Корень: <span class="menukad"><a href="/ru/dict/?num-radicals=3&amp;r1=י&amp;r2=ח&amp;rf=ד">י - ח - ד</a></span></p>
+//</h2><p>Местоимение</p>
+
+    private $regexpTemplates = [
+        'Глагол' => '/<\/h2><p>[А-Яа-яA-Z-a-z0-9]+[^<]+<b>([^<]+)<\/b><\/p><p>Корень: <span[^>]+><a[^>]+>([^<]+)<\/a><\/span><\/p>/u',
+        'Прилагательное' => '/<\/h2><p>[А-Яа-яA-Z-a-z0-9]+[^<]+(<a([^>]+)>модель <i>([А-Яа-яA-Z-a-z0-9]+)<\/i><\/a>)?<\/p>(<p>Корень: <span[^>]+><a[^>]+>([^<]+)<\/a><\/span><\/p>)?/u',
+        'Существительное' => '/<\/h2><p>[А-Яа-яA-Z-a-z0-9]+ [^< ]+(\,* *([А-Яа-яA-Z-a-z0-9]+) род)?<\/p>(<p>Корень: <span[^>]+><a[^>]+>([^<]+)<\/a><\/span><\/p>)?/u',
+        'Наречие' => '/<\/h2><p>[А-Яа-яA-Z-a-z0-9]+[^<]+<\/p>(<p>Корень: <span[^>]+><a[^>]+>([^<]+)<\/a><\/span><\/p>)?/u',
+        'Местоимение' => '',
+    ];
+
     /**
      * @param EntityManagerInterface $entityManager
      */
@@ -67,22 +83,34 @@ class Pealim
 
     }
 
-    public function findLink(string $cssClass, string $text): string
+    public function findLink(string $cssClass, string $text): array
     {
         //<div class="verb-search-result" onclick="javascript:window.document.location=&quot;/ru/dict/7-lalechet/&quot;">
         $template = '/<div class=\"verb-search-result\"[^\/]+(\/ru\/dict\/[a-zA-Z0-9\-_]+\/)/';
-        preg_match($template, $text, $matches);
+        preg_match_all($template, $text, $matches);
 
-        return $matches[1] ?? '';
+        return $matches[1] ?? [];
     }
 
     public function parseForms(string $content, ?string $path = null): int
     {
 
-//        $tplPart = '/<\/h2><p>([А-Яа-яA-Z-a-z0-9]+)[^<]+<b>[^<]+<\/b>.+<\/h3><div class="lead">([А-Яа-яA-Z-a-z0-9]+)</';
-        $tplPart = '/<\/h2><p>([А-Яа-яA-Z-a-z0-9]+)[^<]+<b>([^<]+)<\/b><\/p><p>Корень: <span[^>]+><a[^>]+>([^<]+)<\/a><\/span>/';
+
+
+        $tplPart = '/<\/h2><p>([А-Яа-яA-Z-a-z0-9]+)/u';
+        preg_match($tplPart, $content, $part);
+        if(!isset($part[1])||!isset($this->regexpTemplates[$part[1]])){
+            return 0;
+        }
+        $template = $this->regexpTemplates[$part[1]];
+//        switch ($part[1]) {
+//            case 'Глагол':
+//                $tplParts =
+//                break;
+//        }
+//        $tplParts = '/<\/h2><p>([А-Яа-яA-Z-a-z0-9]+)[^<]+<b>([^<]+)<\/b><\/p><p>Корень: <span[^>]+><a[^>]+>([^<]+)<\/a><\/span>/';
         $tplRus = '/<div class="lead">([^<]+)<\/div>/';
-        preg_match_all($tplPart, $content, $parts);
+        preg_match_all($template, $content, $parts);
         preg_match_all($tplRus, $content, $rus);
         $speechPart = $parts[1][0] ?? '';
         $form = $parts[2][0] ?? '';
@@ -95,8 +123,8 @@ class Pealim
             ->setRoot($root);
         ;
 
-        $this->entityManager->persist($pealimBase);
-        $this->entityManager->flush();
+//        $this->entityManager->persist($pealimBase);
+//        $this->entityManager->flush();
 
         $table = $this->parseTable($content);
         $head = $this->parseHead($table);
@@ -165,10 +193,10 @@ class Pealim
                 ->setTime($time)
                 ->setPerson($person);
 
-            $this->entityManager->persist($vocabularyUnit);
+//            $this->entityManager->persist($vocabularyUnit);
         }
 
-        $this->entityManager->flush();
+//        $this->entityManager->flush();
 
         $vars = array_keys(get_defined_vars());
         foreach ($vars as $var) {
