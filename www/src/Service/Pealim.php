@@ -9,6 +9,7 @@ use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Service\Unit\Word;
+use App\Service\Unit\Base;
 use App\Entity\PealimVocabulary;
 
 class Pealim
@@ -28,12 +29,30 @@ class Pealim
 //</h2><p>Наречие</p><p>Корень: <span class="menukad"><a href="/ru/dict/?num-radicals=3&amp;r1=י&amp;r2=ח&amp;rf=ד">י - ח - ד</a></span></p>
 //</h2><p>Местоимение</p>
 
+//    private $regexpTemplates = [
+//        'Глагол' => '/<\/h2><p>[А-Яа-яA-Z-a-z0-9]+[^<]+<b>([^<]+)<\/b><\/p><p>Корень: <span[^>]+><a[^>]+>([^<]+)<\/a><\/span><\/p>/u',
+//        'Прилагательное' => '/<\/h2><p>[А-Яа-яA-Z-a-z0-9]+[^<]+(<a([^>]+)>модель <i>([А-Яа-яA-Z-a-z0-9]+)<\/i><\/a>)?<\/p>(<p>Корень: <span[^>]+><a[^>]+>([^<]+)<\/a><\/span><\/p>)?/u',
+//        'Существительное' => '/<\/h2><p>[А-Яа-яA-Z-a-z0-9]+ [^< ]+(\,* *([А-Яа-яA-Z-a-z0-9]+) род)?<\/p>(<p>Корень: <span[^>]+><a[^>]+>([^<]+)<\/a><\/span><\/p>)?/u',
+//        'Наречие' => '/<\/h2><p>[А-Яа-яA-Z-a-z0-9]+[^<]+<\/p>(<p>Корень: <span[^>]+><a[^>]+>([^<]+)<\/a><\/span><\/p>)?/u',
+//        'Местоимение' => '',
+//    ];
+
     private $regexpTemplates = [
-        'Глагол' => '/<\/h2><p>[А-Яа-яA-Z-a-z0-9]+[^<]+<b>([^<]+)<\/b><\/p><p>Корень: <span[^>]+><a[^>]+>([^<]+)<\/a><\/span><\/p>/u',
-        'Прилагательное' => '/<\/h2><p>[А-Яа-яA-Z-a-z0-9]+[^<]+(<a([^>]+)>модель <i>([А-Яа-яA-Z-a-z0-9]+)<\/i><\/a>)?<\/p>(<p>Корень: <span[^>]+><a[^>]+>([^<]+)<\/a><\/span><\/p>)?/u',
-        'Существительное' => '/<\/h2><p>[А-Яа-яA-Z-a-z0-9]+ [^< ]+(\,* *([А-Яа-яA-Z-a-z0-9]+) род)?<\/p>(<p>Корень: <span[^>]+><a[^>]+>([^<]+)<\/a><\/span><\/p>)?/u',
-        'Наречие' => '/<\/h2><p>[А-Яа-яA-Z-a-z0-9]+[^<]+<\/p>(<p>Корень: <span[^>]+><a[^>]+>([^<]+)<\/a><\/span><\/p>)?/u',
-        'Местоимение' => '',
+        'Глагол' => [
+             'form' => '/<\/h2><p>[А-Яа-я]+ – <b>([А-Яа-я]+)<\/b><\/p>/u'
+        ],
+        'Прилагательное' => [
+            'form' => '/<\/h2><p>[А-Яа-я]+ – <a[^>]+>модель <i>([А-Яа-я]+)<\/i><\/a><\/p>/u'
+        ],
+        'Существительное' => [
+            'form' => '/<\/h2><p>[А-Яа-я]+ – <a[^>]+>модель <i>([А-Яа-я]+)<\/i><\/a><\/p>/u'
+        ],
+        'Наречие' => [
+            'form' => '/<\/h2><p>[А-Яа-я]+ – <a[^>]+>модель <i>([А-Яа-я]+)<\/i><\/a><\/p>/u'
+        ],
+        'Местоимение' => [
+            'form' => '/<\/h2><p>[А-Яа-я]+ – <a[^>]+>модель <i>([А-Яа-я]+)<\/i><\/a><\/p>/u'
+        ]
     ];
 
     /**
@@ -96,6 +115,37 @@ class Pealim
     {
 
 
+//        $url = 'https://www.pealim.com/ru/search/?q=אני'; // можно заменить на любую из нужных ссылок
+
+// Загружаем HTML-страницу
+        $html = $content;
+
+// Удаляем переносы строк для удобства обработки
+        $html = preg_replace('/\s+/', ' ', $html);
+
+        $base = new Base($path);
+// 1. Извлекаем часть речи
+        if (preg_match('/<\/h2><p>([А-Яа-я]+) – /u', $html, $matches)) {
+            $speechPart = trim($matches[1]);
+            $base->setSpeechPart($speechPart);
+        }
+
+// 2. Извлекаем биньян
+        $tplForm = $this->regexpTemplates[$speechPart]['form'];
+        if (preg_match('/<\/h2><p>[А-Яа-я]+ – <b>([А-Яа-я]+)<\/b><\/p>/', $html, $matches)) {
+            $base->setForm(trim($matches[1]));
+        }
+
+// 3. Извлекаем корень
+        if (preg_match('/<\/h2><p>[А-Яа-я]+ – <b>[А-Яа-я]+<\/b><\/p><p>Корень: <span class="menukad"><a[^>]+>([^<]+)<\/a><\/span><\/p>/', $html, $matches)) {
+            $base->setRoot(trim($matches[1]));
+        }
+
+// 4. Извлекаем перевод
+        if (preg_match('/<div class="lead">([^<]+)<\/div>/', $html, $matches)) {
+            $base->setTranslation(trim($matches[1]));
+        }
+
 
         $tplPart = '/<\/h2><p>([А-Яа-яA-Z-a-z0-9]+)/u';
         preg_match($tplPart, $content, $part);
@@ -109,18 +159,14 @@ class Pealim
 //                break;
 //        }
 //        $tplParts = '/<\/h2><p>([А-Яа-яA-Z-a-z0-9]+)[^<]+<b>([^<]+)<\/b><\/p><p>Корень: <span[^>]+><a[^>]+>([^<]+)<\/a><\/span>/';
-        $tplRus = '/<div class="lead">([^<]+)<\/div>/';
-        preg_match_all($template, $content, $parts);
-        preg_match_all($tplRus, $content, $rus);
-        $speechPart = $parts[1][0] ?? '';
-        $form = $parts[2][0] ?? '';
-        $root = $parts[3][0] ?? '';
-        $translation = $rus[1][0] ?? '';
-        $pealimBase = (new PealimBase())->setSlug($path)
-            ->setForm($form)
-            ->setSpeechPart($speechPart)
-            ->setTranslation($translation)
-            ->setRoot($root);
+//        $tplRus = '/<div class="lead">([^<]+)<\/div>/';
+//        preg_match_all($template, $content, $parts);
+//        preg_match_all($tplRus, $content, $rus);
+//        $speechPart = $parts[1][0] ?? '';
+//        $form = $parts[2][0] ?? '';
+//        $root = $parts[3][0] ?? '';
+//        $translation = $rus[1][0] ?? '';
+        $pealimBase = (new PealimBase($base));
         ;
 
 //        $this->entityManager->persist($pealimBase);

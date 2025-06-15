@@ -6,6 +6,7 @@ use App\Repository\PealimBaseRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use App\Service\Unit\Base;
 
 #[ORM\Entity(repositoryClass: PealimBaseRepository::class)]
 class PealimBase
@@ -36,9 +37,14 @@ class PealimBase
     #[ORM\OneToMany(targetEntity: PealimVocabulary::class, mappedBy: 'pealimBase')]
     private Collection $children;
 
-    public function __construct()
+    public function __construct(Base $base)
     {
         $this->children = new ArrayCollection();
+        $this->translation = $base->getTranslation();
+        $this->root = $base->getRoot();
+        $this->speech_part = $base->getSpeechPart();
+        $this->form = $base->getForm();
+        $this->slug = $base->getSlug();
     }
 
     public function getId(): ?int
