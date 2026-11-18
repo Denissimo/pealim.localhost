@@ -19,6 +19,10 @@ class Pealim
 
     public string $text;
 
+    private array $vocabularyUnitList = [];
+    private array $vocabularyBasesList = [];
+    private bool $isTest = true;
+
     private HttpClientInterface $client;
 
 //</h2><p>Глагол – <b>ПААЛЬ</b></p><p>Корень: <span class="menukad"><a href="/ru/dict/?num-radicals=3&amp;r1=ר&amp;r2=ז&amp;rf=י">ר - ז - ה</a></span></p>
@@ -37,7 +41,14 @@ class Pealim
 //        'Местоимение' => '',
 //    ];
 
-    private $regexpTemplates = [
+    private array $speechParts = [
+        'Глагол' =>  'Глагол',
+        'Прилагательное' =>  'Прилагательное',
+        'Существительное' =>  'Существительное',
+        'Наречие' =>  'Наречие',
+        'Местоимение' =>  'Местоимение'
+    ];
+    private array $regexpTemplates = [
         'Глагол' => [
              'form' => '/<\/h2><p>[А-Яа-я]+ – <b>([А-Яа-я]+)<\/b><\/p>/u'
         ],
@@ -125,7 +136,7 @@ class Pealim
 
         $base = new Base($path);
 // 1. Извлекаем часть речи
-        if (preg_match('/<\/h2><p>([А-Яа-я]+) – /u', $html, $matches)) {
+        if (preg_match('/<\/h2><p>([А-Яа-я]+)( – )?/u', $html, $matches)) {
             $speechPart = trim($matches[1]);
             $base->setSpeechPart($speechPart);
         }
@@ -166,11 +177,14 @@ class Pealim
 //        $form = $parts[2][0] ?? '';
 //        $root = $parts[3][0] ?? '';
 //        $translation = $rus[1][0] ?? '';
+        $this->vocabularyBasesList[$path] = $base;
         $pealimBase = (new PealimBase($base));
         ;
 
-//        $this->entityManager->persist($pealimBase);
-//        $this->entityManager->flush();
+        if (!$this->isTest) {
+            $this->entityManager->persist($pealimBase);
+            $this->entityManager->flush();
+        }
 
         $table = $this->parseTable($content);
         $head = $this->parseHead($table);
@@ -202,9 +216,9 @@ class Pealim
                     continue;
                 }
                 $cellsTable[] = $cell;
-                if (Verb::getTime($level) == Verb::INFINITIVE) {
-                    continue;
-                }
+//                if (Verb::getTime($level) == Verb::INFINITIVE) {
+//                    continue;
+//                }
 //                $colspan = $cell->getColSpan();
 //                $rowspan = $cell->getRowspan();
 //                for ($i = 1; $i < $colspan; $i++) {
@@ -222,7 +236,7 @@ class Pealim
             }
         }
 
-        foreach ($cellsTable as $cell) {
+        foreach ($cellsTable as $number => $cell) {
             $time = Verb::getTime($cell->getY());
             $isPlural = $time == Verb::INFINITIVE ? null : Verb::isPlural($cell);
             $person = $time == Verb::INFINITIVE || $time == Verb::TIME_PRESENT ? null : Verb::getPerson($cell->getY());
@@ -239,10 +253,15 @@ class Pealim
                 ->setTime($time)
                 ->setPerson($person);
 
-//            $this->entityManager->persist($vocabularyUnit);
+            $this->vocabularyUnitList[$path][$number] = $vocabularyUnit;
+            if (!$this->isTest) {
+                $this->entityManager->persist($vocabularyUnit);
+            }
         }
 
-//        $this->entityManager->flush();
+        if (!$this->isTest) {
+            $this->entityManager->flush();
+        }
 
         $vars = array_keys(get_defined_vars());
         foreach ($vars as $var) {

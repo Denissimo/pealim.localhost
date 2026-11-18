@@ -28,7 +28,7 @@ class ParseWordCommand extends Command
     protected function configure(): void
     {
         $this
-            ->addArgument('words', InputArgument::IS_ARRAY, 'Words', ['רָזֶה'])
+            ->addArgument('words', InputArgument::IS_ARRAY, 'Words', ['רָזֶה', 'בִּרְצִינוּת', 'אני'])
             ->addOption('option1', null, InputOption::VALUE_NONE, 'Option description')
         ;
     }

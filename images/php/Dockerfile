@@ -1,8 +1,15 @@
 # Для начала указываем исходный образ, он будет использован как основа
 FROM composer:latest AS composer
-FROM php:8.3-fpm
+FROM php:8.3-fpm-bookworm
 
 COPY --from=composer /usr/bin/composer /usr/bin/composer
+
+COPY --chmod=755 --from=ghcr.io/php/pie:bin /pie /usr/local/bin/pie
+
+RUN groupadd -g 1000 den && \
+    useradd -u 1000 -g den -s /bin/bash -m den
+
+RUN chown -R den:den /var/www
 
 # Необязательная строка с указанием автора образа
 MAINTAINER PHPtoday.ru <info@phptoday.ru>
@@ -38,12 +45,13 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-enable xdebug
 
 RUN pecl install -o -f redis && rm -rf /tmp/pear && docker-php-ext-enable redis
-RUN pecl install amqp
+#RUN pecl install amqp
+RUN pie install php-amqp/php-amqp
 
 RUN docker-php-ext-configure intl --enable-intl && \
     docker-php-ext-configure gd --with-freetype --with-jpeg && \
     docker-php-ext-install -j$(nproc) gd && \
-    docker-php-ext-enable amqp && \
+#    docker-php-ext-enable amqp && \
     docker-php-ext-install  \
         intl iconv mbstring \
         zip pcntl \
@@ -55,6 +63,7 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 #ADD php.ini /usr/local/etc/php/conf.d/40-custom.ini
 # Указываем рабочую директорию для PHP
 WORKDIR /var/www
+USER den
 # Запускаем контейнер
 # Из документации: The main purpose of a CMD is to provide defaults for an executing container. These defaults can include an executable,
 # or they can omit the executable, in which case you must specify an ENTRYPOINT instruction as well.
